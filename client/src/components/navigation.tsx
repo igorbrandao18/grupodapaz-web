@@ -1,22 +1,6 @@
-import { useState } from "react";
-import { Menu, X } from "lucide-react";
 import logoImage from "@assets/image_1759342528663.png";
 
 export default function Navigation() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      const offsetTop = element.offsetTop - 80;
-      window.scrollTo({
-        top: offsetTop,
-        behavior: "smooth",
-      });
-    }
-    setMobileMenuOpen(false);
-  };
-
   return (
     <nav className="fixed top-0 w-full bg-primary shadow-md z-50" data-testid="navigation">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -34,102 +18,18 @@ export default function Navigation() {
             </div>
           </div>
 
-          {/* Desktop Menu */}
-          <div className="hidden md:flex space-x-8">
+          {/* Portal do Cliente Button */}
+          <div>
             <button
-              onClick={() => scrollToSection("inicio")}
-              className="text-primary-foreground hover:text-accent transition-colors font-medium"
-              data-testid="nav-link-inicio"
+              className="bg-primary-foreground text-primary px-6 py-3 rounded-lg hover:bg-primary-foreground/90 transition-colors font-semibold shadow-sm"
+              data-testid="button-portal-cliente"
             >
-              Início
-            </button>
-            <button
-              onClick={() => scrollToSection("servicos")}
-              className="text-primary-foreground hover:text-accent transition-colors font-medium"
-              data-testid="nav-link-servicos"
-            >
-              Serviços
-            </button>
-            <button
-              onClick={() => scrollToSection("depoimentos")}
-              className="text-primary-foreground hover:text-accent transition-colors font-medium"
-              data-testid="nav-link-depoimentos"
-            >
-              Depoimentos
-            </button>
-            <button
-              onClick={() => scrollToSection("contato")}
-              className="text-primary-foreground hover:text-accent transition-colors font-medium"
-              data-testid="nav-link-contato"
-            >
-              Contato
+              Portal do Cliente
             </button>
           </div>
-
-          {/* CTA Button */}
-          <div className="hidden md:block">
-            <button
-              onClick={() => scrollToSection("contato")}
-              className="bg-accent text-accent-foreground px-6 py-3 rounded-lg hover:bg-accent/90 transition-colors font-semibold shadow-sm"
-              data-testid="button-cta-desktop"
-            >
-              Fale Conosco
-            </button>
-          </div>
-
-          {/* Mobile Menu Button */}
-          <button
-            className="md:hidden text-primary-foreground"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            data-testid="button-mobile-menu"
-          >
-            {mobileMenuOpen ? <X className="text-2xl" /> : <Menu className="text-2xl" />}
-          </button>
         </div>
       </div>
 
-      {/* Mobile Menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden bg-primary/95 border-t border-primary-foreground/20" data-testid="mobile-menu">
-          <div className="px-4 py-4 space-y-3">
-            <button
-              onClick={() => scrollToSection("inicio")}
-              className="block w-full text-left text-primary-foreground hover:text-accent transition-colors font-medium py-2"
-              data-testid="mobile-nav-link-inicio"
-            >
-              Início
-            </button>
-            <button
-              onClick={() => scrollToSection("servicos")}
-              className="block w-full text-left text-primary-foreground hover:text-accent transition-colors font-medium py-2"
-              data-testid="mobile-nav-link-servicos"
-            >
-              Serviços
-            </button>
-            <button
-              onClick={() => scrollToSection("depoimentos")}
-              className="block w-full text-left text-primary-foreground hover:text-accent transition-colors font-medium py-2"
-              data-testid="mobile-nav-link-depoimentos"
-            >
-              Depoimentos
-            </button>
-            <button
-              onClick={() => scrollToSection("contato")}
-              className="block w-full text-left text-primary-foreground hover:text-accent transition-colors font-medium py-2"
-              data-testid="mobile-nav-link-contato"
-            >
-              Contato
-            </button>
-            <button
-              onClick={() => scrollToSection("contato")}
-              className="block w-full bg-accent text-accent-foreground px-6 py-3 rounded-lg text-center font-semibold mt-4"
-              data-testid="button-cta-mobile"
-            >
-              Fale Conosco
-            </button>
-          </div>
-        </div>
-      )}
     </nav>
   );
 }
