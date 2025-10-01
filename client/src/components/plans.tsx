@@ -1,4 +1,7 @@
 import { Check } from "lucide-react";
+import planBasicoImg from "@assets/stock_images/peaceful_funeral_flo_9c25f855.jpg";
+import planEssencialImg from "@assets/stock_images/peaceful_funeral_flo_1f0e9dce.jpg";
+import planPremiumImg from "@assets/stock_images/peaceful_funeral_flo_864a96ac.jpg";
 
 export default function Plans() {
   const plans = [
@@ -6,6 +9,7 @@ export default function Plans() {
       name: "Plano Básico",
       price: "R$ 89,90",
       period: "/mês",
+      image: planBasicoImg,
       features: [
         "Cobertura individual",
         "Velório 24h",
@@ -19,6 +23,7 @@ export default function Plans() {
       price: "R$ 149,90",
       period: "/mês",
       popular: true,
+      image: planEssencialImg,
       features: [
         "Até 3 dependentes",
         "Velório premium",
@@ -32,6 +37,7 @@ export default function Plans() {
       name: "Plano Premium",
       price: "R$ 249,90",
       period: "/mês",
+      image: planPremiumImg,
       features: [
         "Até 6 dependentes",
         "Velório VIP",
@@ -72,45 +78,58 @@ export default function Plans() {
           {plans.map((plan, index) => (
             <div
               key={index}
-              className={`bg-card rounded-2xl shadow-lg p-8 relative ${
+              className={`bg-card rounded-2xl shadow-lg overflow-hidden relative ${
                 plan.popular ? 'ring-4 ring-primary transform scale-105' : ''
               }`}
               data-testid={`plan-${index}`}
             >
               {plan.popular && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground px-6 py-2 rounded-full text-sm font-bold">
+                <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground px-6 py-2 rounded-full text-sm font-bold z-10">
                   Mais Popular
                 </div>
               )}
               
-              <div className="text-center mb-8">
-                <h3 className="text-2xl font-bold mb-4">{plan.name}</h3>
-                <div className="flex items-baseline justify-center">
-                  <span className="text-4xl font-bold text-primary">{plan.price}</span>
-                  <span className="text-muted-foreground ml-2">{plan.period}</span>
-                </div>
+              {/* Plan Cover Image */}
+              <div className="relative h-48 overflow-hidden">
+                <img 
+                  src={plan.image} 
+                  alt={`Capa ${plan.name}`}
+                  className="w-full h-full object-cover"
+                  data-testid={`plan-cover-${index}`}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent"></div>
               </div>
+              
+              <div className="p-8">
+                <div className="text-center mb-8">
+                  <h3 className="text-2xl font-bold mb-4">{plan.name}</h3>
+                  <div className="flex items-baseline justify-center">
+                    <span className="text-4xl font-bold text-primary">{plan.price}</span>
+                    <span className="text-muted-foreground ml-2">{plan.period}</span>
+                  </div>
+                </div>
 
-              <ul className="space-y-4 mb-8">
-                {plan.features.map((feature, featureIndex) => (
-                  <li key={featureIndex} className="flex items-start">
-                    <Check className="w-5 h-5 text-primary mr-3 flex-shrink-0 mt-0.5" />
-                    <span className="text-muted-foreground">{feature}</span>
-                  </li>
-                ))}
-              </ul>
+                <ul className="space-y-4 mb-8">
+                  {plan.features.map((feature, featureIndex) => (
+                    <li key={featureIndex} className="flex items-start">
+                      <Check className="w-5 h-5 text-primary mr-3 flex-shrink-0 mt-0.5" />
+                      <span className="text-muted-foreground">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
 
-              <button
-                onClick={scrollToContact}
-                className={`w-full py-3 rounded-lg font-semibold transition-colors ${
-                  plan.popular
-                    ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                    : 'bg-muted text-foreground hover:bg-muted/80'
-                }`}
-                data-testid={`button-contratar-${index}`}
-              >
-                Contratar Plano
-              </button>
+                <button
+                  onClick={scrollToContact}
+                  className={`w-full py-3 rounded-lg font-semibold transition-colors ${
+                    plan.popular
+                      ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                      : 'bg-muted text-foreground hover:bg-muted/80'
+                  }`}
+                  data-testid={`button-contratar-${index}`}
+                >
+                  Contratar Plano
+                </button>
+              </div>
             </div>
           ))}
         </div>
