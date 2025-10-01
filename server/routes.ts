@@ -1,9 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { db } from "./db";
-import { plans } from "@shared/schema";
-import { asc } from "drizzle-orm";
+import { supabaseAdmin } from "./lib/supabaseServer";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/config/supabase', (req, res) => {
@@ -15,12 +13,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/plans', async (req, res) => {
     try {
-      const allPlans = await db
-        .select()
-        .from(plans)
-        .orderBy(asc(plans.displayOrder));
+      const { data: allPlans, error } = await supabaseAdmin
+        .from('plans')
+        .select('*')
+        .order('display_order', { ascending: true });
       
-      res.json(allPlans);
+      if (error) {
+        console.error('Error fetching plans from Supabase:', error);
+        return res.status(500).json({ message: 'Failed to fetch plans' });
+      }
+      
+      res.json(allPlans || []);
     } catch (error) {
       console.error('Error fetching plans:', error);
       res.status(500).json({ message: 'Failed to fetch plans' });
