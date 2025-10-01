@@ -1,7 +1,25 @@
 import { Phone } from "lucide-react";
 import { FaWhatsapp, FaHeart } from "react-icons/fa";
+import { useEffect, useState } from "react";
+import image1 from "@assets/stock_images/peaceful_funeral_hom_6f5ff4f2.jpg";
+import image2 from "@assets/stock_images/peaceful_funeral_hom_43f287a4.jpg";
+import image3 from "@assets/stock_images/peaceful_funeral_hom_4750f98b.jpg";
+import image4 from "@assets/stock_images/peaceful_funeral_hom_8d1632bc.jpg";
+import image5 from "@assets/stock_images/peaceful_funeral_hom_373da676.jpg";
+
+const images = [image1, image2, image3, image4, image5];
 
 export default function Hero() {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const scrollToContact = () => {
     const element = document.getElementById("contato");
     if (element) {
@@ -15,13 +33,21 @@ export default function Hero() {
 
   return (
     <section id="inicio" className="pt-20" data-testid="section-hero">
-      <div
-        className="relative h-[600px] md:h-[700px] bg-cover bg-center"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(44, 62, 80, 0.7), rgba(44, 62, 80, 0.7)), url('https://images.unsplash.com/photo-1519817914152-22d216bb9170?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')",
-        }}
-      >
+      <div className="relative h-[600px] md:h-[700px] overflow-hidden">
+        {images.map((image, index) => (
+          <div
+            key={index}
+            className={`absolute inset-0 transition-opacity duration-1000 ${
+              index === currentImageIndex ? "opacity-100" : "opacity-0"
+            }`}
+            style={{
+              backgroundImage: `linear-gradient(rgba(40, 128, 61, 0.6), rgba(40, 128, 61, 0.6)), url('${image}')`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
+          />
+        ))}
+
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="max-w-4xl mx-auto px-4 text-center">
             <div className="mb-6">
@@ -58,6 +84,19 @@ export default function Hero() {
               </a>
             </div>
           </div>
+        </div>
+
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2" data-testid="carousel-indicators">
+          {images.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentImageIndex(index)}
+              className={`w-3 h-3 rounded-full transition-all ${
+                index === currentImageIndex ? "bg-white w-8" : "bg-white/50"
+              }`}
+              data-testid={`carousel-indicator-${index}`}
+            />
+          ))}
         </div>
       </div>
     </section>
