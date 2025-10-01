@@ -6,8 +6,15 @@ The tech stack consists of:
 - **Frontend**: React with TypeScript, Vite as the build tool, Wouter for routing
 - **UI Framework**: Tailwind CSS with shadcn/ui component library (New York style)
 - **Backend**: Express.js server with TypeScript
-- **Database**: PostgreSQL with Drizzle ORM (configured but minimal implementation)
+- **Database**: Supabase PostgreSQL for dynamic plan management (with fallback data)
 - **State Management**: TanStack Query (React Query) for server state
+
+## Recent Updates (October 2025)
+
+- **Dynamic Plans System**: Plans now load from Supabase database with fallback mechanism
+- **Enhanced Plan Schema**: Added description, dependents count, active status, and updated_at fields
+- **Admin Interface**: Full CRUD management at `/admin/plans` for creating, editing, deleting, and toggling plan status
+- **Improved UI**: Plans display with descriptions and dependent counts in modern badge format
 
 # User Preferences
 
@@ -18,9 +25,12 @@ Preferred communication style: Simple, everyday language.
 ## Frontend Architecture
 
 **Single-Page Application (SPA) Pattern**
-- The application uses Wouter for client-side routing with a simple route structure: home page and a 404 fallback
+- The application uses Wouter for client-side routing with multiple routes:
+  - `/` - Home page with all landing sections
+  - `/admin/plans` - Admin interface for plan management
+  - `404` - Not found fallback
 - All UI components are modular and organized in a component-based architecture
-- The main home page aggregates multiple section components (Navigation, Hero, About, Services, etc.)
+- The main home page aggregates multiple section components (Navigation, Hero, About, Services, Plans, etc.)
 
 **UI Component System**
 - Built on shadcn/ui (New York variant), providing a comprehensive set of pre-styled, accessible React components
