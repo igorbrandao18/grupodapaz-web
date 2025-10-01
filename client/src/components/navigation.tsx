@@ -5,17 +5,13 @@ export default function Navigation() {
     <nav className="fixed top-0 w-full bg-primary shadow-md z-50" data-testid="navigation">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center">
             <img 
               src={logoImage} 
               alt="Grupo da Paz Logo" 
               className="h-12 w-12 md:h-16 md:w-16 object-contain" 
               data-testid="logo-icon"
             />
-            <div>
-              <h1 className="text-2xl font-bold text-primary-foreground" data-testid="company-name">Grupo da Paz</h1>
-              <p className="text-xs text-primary-foreground/80">Serviços Funerários</p>
-            </div>
           </div>
 
           {/* Portal do Cliente Button */}
