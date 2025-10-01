@@ -35,8 +35,8 @@
   --sidebar-accent-foreground: hsl(145, 52%, 35%);
   --sidebar-border: hsl(0, 0%, 90%);
   --sidebar-ring: hsl(145, 52%, 35%);
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-serif: Georgia, "Times New Roman", serif;
+  --font-sans: "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: "Playfair Display", Georgia, serif;
   --font-mono: Menlo, Monaco, monospace;
   --radius: 0.5rem;
   --shadow-2xs: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
@@ -84,8 +84,8 @@
   --sidebar-accent-foreground: hsl(145, 52%, 35%);
   --sidebar-border: hsl(0, 0%, 25%);
   --sidebar-ring: hsl(145, 52%, 35%);
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-serif: Georgia, "Times New Roman", serif;
+  --font-sans: "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: "Playfair Display", Georgia, serif;
   --font-mono: Menlo, Monaco, monospace;
   --radius: 0.5rem;
   --shadow-2xs: 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
