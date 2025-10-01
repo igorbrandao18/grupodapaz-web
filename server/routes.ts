@@ -39,7 +39,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             price: 'R$ 149,90',
             period: '/mês',
             popular: true,
-            image: 'https://images.unsplash.com/photo-1455659817273-f96807779a3c?w=800&h=600&fit=crop',
+            image: 'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=800&h=600&fit=crop',
             features: ['Até 3 dependentes', 'Velório premium', 'Cremação ou sepultamento', 'Transporte estadual', 'Floricultura inclusa', 'Assistência psicológica'],
             display_order: 2
           },
