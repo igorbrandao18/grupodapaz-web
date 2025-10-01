@@ -1,55 +1,11 @@
-import { Check } from "lucide-react";
-import planBasicoImg from "@assets/stock_images/peaceful_funeral_flo_9c25f855.jpg";
-import planEssencialImg from "@assets/stock_images/peaceful_funeral_flo_1f0e9dce.jpg";
-import planPremiumImg from "@assets/stock_images/peaceful_funeral_flo_864a96ac.jpg";
+import { Check, Loader2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import type { Plan } from "@shared/schema";
 
 export default function Plans() {
-  const plans = [
-    {
-      name: "Plano Básico",
-      price: "R$ 89,90",
-      period: "/mês",
-      image: planBasicoImg,
-      features: [
-        "Cobertura individual",
-        "Velório 24h",
-        "Sepultamento",
-        "Transporte local",
-        "Assistência documental"
-      ]
-    },
-    {
-      name: "Plano Essencial",
-      price: "R$ 149,90",
-      period: "/mês",
-      popular: true,
-      image: planEssencialImg,
-      features: [
-        "Até 3 dependentes",
-        "Velório premium",
-        "Cremação ou sepultamento",
-        "Transporte estadual",
-        "Floricultura inclusa",
-        "Assistência psicológica"
-      ]
-    },
-    {
-      name: "Plano Premium",
-      price: "R$ 249,90",
-      period: "/mês",
-      image: planPremiumImg,
-      features: [
-        "Até 6 dependentes",
-        "Velório VIP",
-        "Cremação e sepultamento",
-        "Transporte nacional",
-        "Floricultura premium",
-        "Assistência jurídica",
-        "Cerimônia personalizada",
-        "Memorial digital"
-      ]
-    }
-  ];
+  const { data: plans, isLoading, error } = useQuery<Plan[]>({
+    queryKey: ['/api/plans'],
+  });
 
   const scrollToContact = () => {
     const element = document.getElementById("contato");
@@ -74,8 +30,21 @@ export default function Plans() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {plans.map((plan, index) => (
+        {isLoading && (
+          <div className="flex justify-center items-center py-20">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        )}
+
+        {error && (
+          <div className="text-center py-20">
+            <p className="text-red-500">Erro ao carregar os planos. Tente novamente mais tarde.</p>
+          </div>
+        )}
+
+        {plans && plans.length > 0 && (
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {plans.map((plan, index) => (
             <div
               key={index}
               className={`bg-card rounded-2xl shadow-lg overflow-hidden relative ${
@@ -90,15 +59,17 @@ export default function Plans() {
               )}
               
               {/* Plan Cover Image */}
-              <div className="relative h-48 overflow-hidden">
-                <img 
-                  src={plan.image} 
-                  alt={`Capa ${plan.name}`}
-                  className="w-full h-full object-cover"
-                  data-testid={`plan-cover-${index}`}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent"></div>
-              </div>
+              {plan.image && (
+                <div className="relative h-48 overflow-hidden">
+                  <img 
+                    src={plan.image} 
+                    alt={`Capa ${plan.name}`}
+                    className="w-full h-full object-cover"
+                    data-testid={`plan-cover-${index}`}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent"></div>
+                </div>
+              )}
               
               <div className="p-8">
                 <div className="text-center mb-8">
@@ -131,12 +102,21 @@ export default function Plans() {
                 </button>
               </div>
             </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
-        <p className="text-center text-muted-foreground mt-8">
-          *Valores promocionais. Parcelamento em até 12x sem juros no cartão.
-        </p>
+        {plans && plans.length === 0 && !isLoading && !error && (
+          <div className="text-center py-20">
+            <p className="text-muted-foreground">Nenhum plano disponível no momento.</p>
+          </div>
+        )}
+
+        {!isLoading && !error && (
+          <p className="text-center text-muted-foreground mt-8">
+            *Valores promocionais. Parcelamento em até 12x sem juros no cartão.
+          </p>
+        )}
       </div>
     </section>
   );
