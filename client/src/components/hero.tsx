@@ -1,11 +1,11 @@
 import { Phone } from "lucide-react";
 import { FaWhatsapp, FaHeart } from "react-icons/fa";
 import { useEffect, useState } from "react";
-import image1 from "@assets/stock_images/peaceful_funeral_hom_6f5ff4f2.jpg";
-import image2 from "@assets/stock_images/peaceful_funeral_hom_43f287a4.jpg";
-import image3 from "@assets/stock_images/peaceful_funeral_hom_4750f98b.jpg";
-import image4 from "@assets/stock_images/peaceful_funeral_hom_8d1632bc.jpg";
-import image5 from "@assets/stock_images/peaceful_funeral_hom_373da676.jpg";
+import image1 from "@assets/stock_images/funeral_home_memoria_8d14bad3.jpg";
+import image2 from "@assets/stock_images/funeral_home_memoria_537515fc.jpg";
+import image3 from "@assets/stock_images/funeral_home_memoria_73d4fc1e.jpg";
+import image4 from "@assets/stock_images/funeral_home_memoria_3c12273a.jpg";
+import image5 from "@assets/stock_images/funeral_home_memoria_bd2300aa.jpg";
 
 const images = [image1, image2, image3, image4, image5];
 
@@ -41,7 +41,7 @@ export default function Hero() {
               index === currentImageIndex ? "opacity-100" : "opacity-0"
             }`}
             style={{
-              backgroundImage: `linear-gradient(rgba(40, 128, 61, 0.6), rgba(40, 128, 61, 0.6)), url('${image}')`,
+              backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('${image}')`,
               backgroundSize: "cover",
               backgroundPosition: "center",
             }}
