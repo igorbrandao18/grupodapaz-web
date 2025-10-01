@@ -18,7 +18,7 @@ export default function Navigation() {
   };
 
   return (
-    <nav className="fixed top-0 w-full bg-white shadow-md z-50" data-testid="navigation">
+    <nav className="fixed top-0 w-full bg-primary shadow-md z-50" data-testid="navigation">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           <div className="flex items-center space-x-3">
@@ -29,8 +29,8 @@ export default function Navigation() {
               data-testid="logo-icon"
             />
             <div>
-              <h1 className="text-2xl font-bold text-secondary" data-testid="company-name">Grupo da Paz</h1>
-              <p className="text-xs text-muted-foreground">Serviços Funerários</p>
+              <h1 className="text-2xl font-bold text-primary-foreground" data-testid="company-name">Grupo da Paz</h1>
+              <p className="text-xs text-primary-foreground/80">Serviços Funerários</p>
             </div>
           </div>
 
@@ -38,28 +38,28 @@ export default function Navigation() {
           <div className="hidden md:flex space-x-8">
             <button
               onClick={() => scrollToSection("inicio")}
-              className="text-foreground hover:text-primary transition-colors font-medium"
+              className="text-primary-foreground hover:text-accent transition-colors font-medium"
               data-testid="nav-link-inicio"
             >
               Início
             </button>
             <button
               onClick={() => scrollToSection("servicos")}
-              className="text-foreground hover:text-primary transition-colors font-medium"
+              className="text-primary-foreground hover:text-accent transition-colors font-medium"
               data-testid="nav-link-servicos"
             >
               Serviços
             </button>
             <button
               onClick={() => scrollToSection("depoimentos")}
-              className="text-foreground hover:text-primary transition-colors font-medium"
+              className="text-primary-foreground hover:text-accent transition-colors font-medium"
               data-testid="nav-link-depoimentos"
             >
               Depoimentos
             </button>
             <button
               onClick={() => scrollToSection("contato")}
-              className="text-foreground hover:text-primary transition-colors font-medium"
+              className="text-primary-foreground hover:text-accent transition-colors font-medium"
               data-testid="nav-link-contato"
             >
               Contato
@@ -70,7 +70,7 @@ export default function Navigation() {
           <div className="hidden md:block">
             <button
               onClick={() => scrollToSection("contato")}
-              className="bg-primary text-primary-foreground px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors font-semibold shadow-sm"
+              className="bg-accent text-accent-foreground px-6 py-3 rounded-lg hover:bg-accent/90 transition-colors font-semibold shadow-sm"
               data-testid="button-cta-desktop"
             >
               Fale Conosco
@@ -79,7 +79,7 @@ export default function Navigation() {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden text-secondary"
+            className="md:hidden text-primary-foreground"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             data-testid="button-mobile-menu"
           >
@@ -90,39 +90,39 @@ export default function Navigation() {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-white border-t border-border" data-testid="mobile-menu">
+        <div className="md:hidden bg-primary/95 border-t border-primary-foreground/20" data-testid="mobile-menu">
           <div className="px-4 py-4 space-y-3">
             <button
               onClick={() => scrollToSection("inicio")}
-              className="block w-full text-left text-foreground hover:text-primary transition-colors font-medium py-2"
+              className="block w-full text-left text-primary-foreground hover:text-accent transition-colors font-medium py-2"
               data-testid="mobile-nav-link-inicio"
             >
               Início
             </button>
             <button
               onClick={() => scrollToSection("servicos")}
-              className="block w-full text-left text-foreground hover:text-primary transition-colors font-medium py-2"
+              className="block w-full text-left text-primary-foreground hover:text-accent transition-colors font-medium py-2"
               data-testid="mobile-nav-link-servicos"
             >
               Serviços
             </button>
             <button
               onClick={() => scrollToSection("depoimentos")}
-              className="block w-full text-left text-foreground hover:text-primary transition-colors font-medium py-2"
+              className="block w-full text-left text-primary-foreground hover:text-accent transition-colors font-medium py-2"
               data-testid="mobile-nav-link-depoimentos"
             >
               Depoimentos
             </button>
             <button
               onClick={() => scrollToSection("contato")}
-              className="block w-full text-left text-foreground hover:text-primary transition-colors font-medium py-2"
+              className="block w-full text-left text-primary-foreground hover:text-accent transition-colors font-medium py-2"
               data-testid="mobile-nav-link-contato"
             >
               Contato
             </button>
             <button
               onClick={() => scrollToSection("contato")}
-              className="block w-full bg-primary text-primary-foreground px-6 py-3 rounded-lg text-center font-semibold mt-4"
+              className="block w-full bg-accent text-accent-foreground px-6 py-3 rounded-lg text-center font-semibold mt-4"
               data-testid="button-cta-mobile"
             >
               Fale Conosco
