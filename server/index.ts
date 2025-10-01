@@ -4,6 +4,12 @@ import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 
+app.use((req, res, next) => {
+  res.setHeader('X-Supabase-Url', process.env.SUPABASE_URL || '');
+  res.setHeader('X-Supabase-Anon-Key', process.env.SUPABASE_ANON_KEY || '');
+  next();
+});
+
 declare module 'http' {
   interface IncomingMessage {
     rawBody: unknown
