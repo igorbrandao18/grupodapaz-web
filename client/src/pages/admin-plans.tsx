@@ -69,6 +69,7 @@ export default function AdminPlans() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/plans'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/plans', 'all'] });
       toast({ title: "Plano criado com sucesso!" });
       setIsDialogOpen(false);
       form.reset();
@@ -84,6 +85,7 @@ export default function AdminPlans() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/plans'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/plans', 'all'] });
       toast({ title: "Plano atualizado com sucesso!" });
       setIsDialogOpen(false);
       setEditingPlan(null);
@@ -100,6 +102,7 @@ export default function AdminPlans() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/plans'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/plans', 'all'] });
       toast({ title: "Plano deletado com sucesso!" });
     },
     onError: () => {
@@ -113,6 +116,7 @@ export default function AdminPlans() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/plans'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/plans', 'all'] });
       toast({ title: "Status atualizado com sucesso!" });
     },
     onError: () => {
