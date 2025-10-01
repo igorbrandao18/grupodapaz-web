@@ -1,4 +1,4 @@
-import { Check, Loader2 } from "lucide-react";
+import { Check, Loader2, Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import type { Plan } from "@shared/schema";
 
@@ -72,12 +72,29 @@ export default function Plans() {
               )}
               
               <div className="p-8">
-                <div className="text-center mb-8">
-                  <h3 className="text-2xl font-bold mb-4">{plan.name}</h3>
-                  <div className="flex items-baseline justify-center">
+                <div className="text-center mb-6">
+                  <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
+                  <div className="flex items-baseline justify-center mb-4">
                     <span className="text-4xl font-bold text-primary">{plan.price}</span>
                     <span className="text-muted-foreground ml-2">{plan.period}</span>
                   </div>
+                  
+                  {plan.description && (
+                    <p className="text-sm text-muted-foreground mb-3">
+                      {plan.description}
+                    </p>
+                  )}
+                  
+                  {plan.dependents && (
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-muted rounded-full text-sm">
+                      <Users className="w-4 h-4 text-primary" />
+                      <span>
+                        {plan.dependents === 1 
+                          ? '1 pessoa' 
+                          : `Até ${plan.dependents} dependentes`}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <ul className="space-y-4 mb-8">
