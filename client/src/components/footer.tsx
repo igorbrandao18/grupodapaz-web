@@ -25,11 +25,11 @@ export default function Footer() {
               </div>
               <div>
                 <h3 className="text-2xl font-bold">Grupo da Paz</h3>
-                <p className="text-sm opacity-80">Serviços Funerários</p>
+                <p className="text-sm opacity-80">Terra Prometida</p>
               </div>
             </div>
             <p className="opacity-80 mb-4">
-              Há mais de 30 anos cuidando de famílias com respeito, dignidade e profissionalismo.
+              Há mais de 15 anos cuidando das famílias cearenses com carinho, respeito e excelência em todos os momentos.
             </p>
             <div className="flex space-x-4">
               <a
@@ -56,106 +56,36 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Quick Links */}
-          <div data-testid="footer-quick-links">
-            <h4 className="text-xl font-bold mb-6">Links Rápidos</h4>
+          {/* Services */}
+          <div data-testid="footer-services">
+            <h4 className="text-xl font-bold mb-6">Nossos Serviços</h4>
             <ul className="space-y-3">
-              <li>
-                <button
-                  onClick={() => scrollToSection("inicio")}
-                  className="opacity-80 hover:opacity-100 hover:text-primary transition-colors"
-                  data-testid="footer-link-inicio"
-                >
-                  Início
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => scrollToSection("servicos")}
-                  className="opacity-80 hover:opacity-100 hover:text-primary transition-colors"
-                  data-testid="footer-link-servicos"
-                >
-                  Serviços
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => scrollToSection("depoimentos")}
-                  className="opacity-80 hover:opacity-100 hover:text-primary transition-colors"
-                  data-testid="footer-link-depoimentos"
-                >
-                  Depoimentos
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => scrollToSection("contato")}
-                  className="opacity-80 hover:opacity-100 hover:text-primary transition-colors"
-                  data-testid="footer-link-contato"
-                >
-                  Contato
-                </button>
-              </li>
+              <li className="opacity-80">Proteção Funeral Completa</li>
+              <li className="opacity-80">Assistência Familiar</li>
+              <li className="opacity-80">Plano Familiar</li>
+              <li className="opacity-80">Atendimento 24h</li>
+              <li className="opacity-80">Transporte Incluso</li>
             </ul>
           </div>
 
-          {/* Services */}
-          <div data-testid="footer-services">
-            <h4 className="text-xl font-bold mb-6">Serviços</h4>
-            <ul className="space-y-3">
+          {/* Units */}
+          <div data-testid="footer-units">
+            <h4 className="text-xl font-bold mb-6">Nossas Unidades</h4>
+            <ul className="space-y-4">
               <li>
-                <button
-                  onClick={() => scrollToSection("servicos")}
-                  className="opacity-80 hover:opacity-100 hover:text-primary transition-colors"
-                  data-testid="footer-service-velorio"
-                >
-                  Velório
-                </button>
+                <p className="font-semibold">Fortaleza</p>
+                <p className="text-sm opacity-80">Av. Beira Mar, 1234</p>
+                <p className="text-sm opacity-80">(85) 3456-7890</p>
               </li>
               <li>
-                <button
-                  onClick={() => scrollToSection("servicos")}
-                  className="opacity-80 hover:opacity-100 hover:text-primary transition-colors"
-                  data-testid="footer-service-cremacao"
-                >
-                  Cremação
-                </button>
+                <p className="font-semibold">Sobral</p>
+                <p className="text-sm opacity-80">Rua da Paz, 567</p>
+                <p className="text-sm opacity-80">(88) 2345-6789</p>
               </li>
               <li>
-                <button
-                  onClick={() => scrollToSection("servicos")}
-                  className="opacity-80 hover:opacity-100 hover:text-primary transition-colors"
-                  data-testid="footer-service-sepultamento"
-                >
-                  Sepultamento
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => scrollToSection("servicos")}
-                  className="opacity-80 hover:opacity-100 hover:text-primary transition-colors"
-                  data-testid="footer-service-floricultura"
-                >
-                  Floricultura
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => scrollToSection("servicos")}
-                  className="opacity-80 hover:opacity-100 hover:text-primary transition-colors"
-                  data-testid="footer-service-documentacao"
-                >
-                  Documentação
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => scrollToSection("servicos")}
-                  className="opacity-80 hover:opacity-100 hover:text-primary transition-colors"
-                  data-testid="footer-service-apoio"
-                >
-                  Apoio Familiar
-                </button>
+                <p className="font-semibold">Juazeiro do Norte</p>
+                <p className="text-sm opacity-80">Av. São Francisco, 890</p>
+                <p className="text-sm opacity-80">(88) 1234-5678</p>
               </li>
             </ul>
           </div>
@@ -167,13 +97,13 @@ export default function Footer() {
               <li className="flex items-start space-x-3">
                 <Phone className="text-primary mt-1 flex-shrink-0" size={20} />
                 <div>
-                  <p className="opacity-80 text-sm">Atendimento 24h</p>
+                  <p className="opacity-80 text-sm">Telefone 24h</p>
                   <a
-                    href="tel:+551140028922"
+                    href="tel:+558534567890"
                     className="font-semibold hover:text-primary transition-colors"
                     data-testid="footer-phone"
                   >
-                    (11) 4002-8922
+                    (85) 3456-7890
                   </a>
                 </div>
               </li>
@@ -182,11 +112,11 @@ export default function Footer() {
                 <div>
                   <p className="opacity-80 text-sm">WhatsApp</p>
                   <a
-                    href="https://wa.me/5511999999999"
+                    href="https://wa.me/5585987654321"
                     className="font-semibold hover:text-primary transition-colors"
                     data-testid="footer-whatsapp"
                   >
-                    (11) 99999-9999
+                    (85) 9 8765-4321
                   </a>
                 </div>
               </li>
@@ -203,47 +133,16 @@ export default function Footer() {
                   </a>
                 </div>
               </li>
-              <li className="flex items-start space-x-3">
-                <MapPin className="text-primary mt-1 flex-shrink-0" size={20} />
-                <div>
-                  <p className="opacity-80 text-sm">
-                    Av. Paulista, 1000
-                    <br />
-                    São Paulo, SP
-                  </p>
-                </div>
-              </li>
             </ul>
           </div>
         </div>
 
-        {/* Business Hours */}
-        <div className="border-t border-white/20 pt-8 mb-8" data-testid="footer-hours">
-          <div className="text-center">
-            <h4 className="text-xl font-bold mb-4">Horário de Atendimento</h4>
-            <div className="grid md:grid-cols-3 gap-4 max-w-3xl mx-auto">
-              <div className="bg-primary/10 rounded-lg p-4">
-                <p className="font-semibold mb-1">Emergencial</p>
-                <p className="opacity-80">24 horas - Todos os dias</p>
-              </div>
-              <div className="bg-primary/10 rounded-lg p-4">
-                <p className="font-semibold mb-1">Segunda a Sexta</p>
-                <p className="opacity-80">8h às 18h</p>
-              </div>
-              <div className="bg-primary/10 rounded-lg p-4">
-                <p className="font-semibold mb-1">Sábados</p>
-                <p className="opacity-80">9h às 14h</p>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Legal */}
         <div className="border-t border-white/20 pt-8" data-testid="footer-legal">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="text-center md:text-left">
-              <p className="opacity-80 text-sm">© 2024 Grupo da Paz Serviços Funerários. Todos os direitos reservados.</p>
-              <p className="opacity-60 text-xs mt-1">CNPJ: 12.345.678/0001-90 | Licença Municipal: 12345</p>
+              <p className="opacity-80 text-sm">© 2024 Grupo da Paz - Terra Prometida. Todos os direitos reservados.</p>
             </div>
             <div className="flex space-x-6 text-sm">
               <a href="#" className="opacity-80 hover:opacity-100 hover:text-primary transition-colors" data-testid="link-privacy">
@@ -252,8 +151,8 @@ export default function Footer() {
               <a href="#" className="opacity-80 hover:opacity-100 hover:text-primary transition-colors" data-testid="link-terms">
                 Termos de Uso
               </a>
-              <a href="#" className="opacity-80 hover:opacity-100 hover:text-primary transition-colors" data-testid="link-lgpd">
-                LGPD
+              <a href="#" className="opacity-80 hover:opacity-100 hover:text-primary transition-colors" data-testid="link-contract">
+                Contrato
               </a>
             </div>
           </div>

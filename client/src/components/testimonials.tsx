@@ -1,36 +1,39 @@
-import { User, Quote } from "lucide-react";
+import { Quote } from "lucide-react";
 
 export default function Testimonials() {
   const testimonials = [
     {
+      text: "O Grupo da Paz me deu tranquilidade em um momento muito difícil. O atendimento foi excepcional e todo o processo foi conduzido com muito respeito e carinho.",
       name: "Maria Silva",
-      location: "São Paulo, SP",
-      text: "Em um momento tão difícil, o Grupo da Paz nos acolheu com tanto carinho e profissionalismo. Cuidaram de tudo com respeito e dignidade. Somos eternamente gratos.",
+      plan: "Cliente Premium",
+      initials: "MS",
       testId: "testimonial-1",
     },
     {
+      text: "Recomendo de olhos fechados. A equipe é muito profissional e o serviço é completo. Vale cada centavo investido na proteção da família.",
       name: "João Santos",
-      location: "Campinas, SP",
-      text: "A equipe foi extremamente atenciosa e cuidadosa. Facilitaram toda a burocracia e nos permitiram focar no que realmente importava: estar com nossa família. Recomendo de coração.",
+      plan: "Cliente Essencial",
+      initials: "JS",
       testId: "testimonial-2",
     },
     {
+      text: "Foi uma escolha acertada contratar o Grupo da Paz. O atendimento 24h é real e a qualidade do serviço superou minhas expectativas.",
       name: "Ana Costa",
-      location: "Santos, SP",
-      text: "Não tenho palavras para agradecer todo o suporte e carinho que recebemos. O Grupo da Paz honrou a memória do nosso pai com toda a dignidade que ele merecia. Muito obrigada.",
+      plan: "Cliente Básico",
+      initials: "AC",
       testId: "testimonial-3",
     },
   ];
 
   return (
-    <section id="depoimentos" className="py-20 bg-gradient-to-b from-muted to-white" data-testid="section-testimonials">
+    <section id="depoimentos" className="py-20 bg-white" data-testid="section-testimonials">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-secondary mb-4" data-testid="text-testimonials-title">
-            Mensagens de Conforto
+          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4" data-testid="text-testimonials-title">
+            O que nossos clientes dizem
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto" data-testid="text-testimonials-description">
-            Palavras de famílias que confiaram em nossos serviços neste momento delicado
+            Histórias reais de famílias que encontraram conforto e proteção conosco
           </p>
         </div>
 
@@ -38,43 +41,24 @@ export default function Testimonials() {
           {testimonials.map((testimonial, index) => (
             <div
               key={index}
-              className="bg-card rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow"
+              className="bg-card rounded-xl shadow-lg p-8"
               data-testid={testimonial.testId}
             >
-              <div className="flex items-center mb-6">
-                <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mr-4">
-                  <User className="text-primary text-xl" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-card-foreground" data-testid={`text-${testimonial.testId}-name`}>
-                    {testimonial.name}
-                  </h4>
-                  <div className="flex text-accent">
-                    {[...Array(5)].map((_, i) => (
-                      <svg key={i} className="w-4 h-4 fill-current" viewBox="0 0 20 20">
-                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
-                      </svg>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <p className="text-muted-foreground italic mb-4" data-testid={`text-${testimonial.testId}-content`}>
+              <Quote className="text-primary w-10 h-10 mb-4" />
+              <p className="text-muted-foreground mb-6 italic" data-testid={`text-${testimonial.testId}-content`}>
                 "{testimonial.text}"
               </p>
-              <p className="text-sm text-muted-foreground" data-testid={`text-${testimonial.testId}-location`}>
-                {testimonial.location}
-              </p>
+              <div className="flex items-center">
+                <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold mr-4">
+                  {testimonial.initials}
+                </div>
+                <div>
+                  <p className="font-bold" data-testid={`text-${testimonial.testId}-name`}>{testimonial.name}</p>
+                  <p className="text-sm text-muted-foreground" data-testid={`text-${testimonial.testId}-plan`}>{testimonial.plan}</p>
+                </div>
+              </div>
             </div>
           ))}
-        </div>
-
-        <div className="mt-16 max-w-4xl mx-auto text-center bg-card rounded-2xl p-12 shadow-xl" data-testid="comfort-quote">
-          <Quote className="text-accent text-4xl mb-6 mx-auto" />
-          <p className="text-2xl text-card-foreground font-serif italic mb-6" data-testid="text-quote">
-            "A morte não é nada. Eu apenas deslizei para o próximo quarto. Eu sou eu, você é você. O que éramos um para
-            o outro, ainda somos."
-          </p>
-          <p className="text-muted-foreground font-semibold" data-testid="text-quote-author">— Henry Scott Holland</p>
         </div>
       </div>
     </section>

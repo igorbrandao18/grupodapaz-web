@@ -1,10 +1,13 @@
 import Navigation from "@/components/navigation";
 import Hero from "@/components/hero";
-import About from "@/components/about";
+import WhyChoose from "@/components/why-choose";
+import Plans from "@/components/plans";
 import Services from "@/components/services";
-import WhyChooseUs from "@/components/why-choose-us";
-import Testimonials from "@/components/testimonials";
+import Benefits from "@/components/benefits";
+import Units from "@/components/units";
+import FAQ from "@/components/faq";
 import Contact from "@/components/contact";
+import Testimonials from "@/components/testimonials";
 import Footer from "@/components/footer";
 import BackToTop from "@/components/back-to-top";
 
@@ -13,11 +16,14 @@ export default function Home() {
     <div className="min-h-screen" data-testid="page-home">
       <Navigation />
       <Hero />
-      <About />
+      <WhyChoose />
+      <Plans />
       <Services />
-      <WhyChooseUs />
-      <Testimonials />
+      <Benefits />
+      <Units />
+      <FAQ />
       <Contact />
+      <Testimonials />
       <Footer />
       <BackToTop />
     </div>
