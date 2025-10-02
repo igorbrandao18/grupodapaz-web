@@ -3,19 +3,25 @@ import { pgTable, text, varchar, boolean, integer, jsonb, timestamp, serial } fr
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+export const profiles = pgTable("profiles", {
+  id: varchar("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  fullName: text("full_name"),
+  phone: text("phone"),
+  role: text("role").notNull().default("client"),
+  planId: integer("plan_id"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
+export const insertProfileSchema = createInsertSchema(profiles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
+export type InsertProfile = z.infer<typeof insertProfileSchema>;
+export type Profile = typeof profiles.$inferSelect;
 
 export const plans = pgTable("plans", {
   id: serial("id").primaryKey(),

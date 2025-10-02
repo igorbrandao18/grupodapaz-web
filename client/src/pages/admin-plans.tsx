@@ -6,6 +6,7 @@ import type { Plan } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import ProtectedRoute from "@/components/protected-route";
 import {
   Dialog,
   DialogContent,
@@ -33,7 +34,7 @@ const planFormSchema = insertPlanSchema.extend({
   features: z.string().transform(val => val.split('\n').filter(Boolean)),
 });
 
-export default function AdminPlans() {
+function AdminPlansContent() {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
@@ -452,5 +453,13 @@ export default function AdminPlans() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function AdminPlans() {
+  return (
+    <ProtectedRoute requireAdmin>
+      <AdminPlansContent />
+    </ProtectedRoute>
   );
 }

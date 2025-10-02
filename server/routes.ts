@@ -239,6 +239,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get single plan by ID
+  app.get('/api/plans/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      const { data: plan, error } = await supabaseAdmin
+        .from('plans')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error) {
+        return res.status(404).json({ message: 'Plan not found' });
+      }
+      
+      res.json(plan);
+    } catch (error) {
+      console.error('Error fetching plan:', error);
+      res.status(500).json({ message: 'Failed to fetch plan' });
+    }
+  });
+
+  // Get all profiles
+  app.get('/api/profiles', async (req, res) => {
+    try {
+      const { data: profiles, error } = await supabaseAdmin
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching profiles:', error);
+        return res.json([]);
+      }
+      
+      res.json(profiles || []);
+    } catch (error) {
+      console.error('Error fetching profiles:', error);
+      res.json([]);
+    }
+  });
+
+  // Update profile
+  app.patch('/api/profiles/:id', async (req, res) => {
+    try {
+      const id = req.params.id;
+      const updates = req.body;
+      
+      const { data: updatedProfile, error } = await supabaseAdmin
+        .from('profiles')
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error updating profile:', error);
+        return res.status(500).json({ message: 'Failed to update profile' });
+      }
+      
+      res.json(updatedProfile);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      res.status(400).json({ message: 'Invalid profile data' });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

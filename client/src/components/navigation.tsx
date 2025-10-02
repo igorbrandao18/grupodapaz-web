@@ -1,3 +1,4 @@
+import { Link } from "wouter";
 import logoImage from "@assets/image_1759342528663.png";
 
 export default function Navigation() {
@@ -16,12 +17,14 @@ export default function Navigation() {
 
           {/* Portal do Cliente Button */}
           <div>
-            <button
-              className="bg-primary-foreground text-primary px-3 py-2 md:px-6 md:py-3 rounded-lg hover:bg-primary-foreground/90 transition-colors font-semibold shadow-sm text-sm md:text-base"
-              data-testid="button-portal-cliente"
-            >
-              Portal do Cliente
-            </button>
+            <Link href="/login">
+              <button
+                className="bg-primary-foreground text-primary px-3 py-2 md:px-6 md:py-3 rounded-lg hover:bg-primary-foreground/90 transition-colors font-semibold shadow-sm text-sm md:text-base"
+                data-testid="button-portal-cliente"
+              >
+                Portal do Cliente
+              </button>
+            </Link>
           </div>
         </div>
       </div>
