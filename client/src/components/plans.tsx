@@ -1,21 +1,69 @@
-import { Check, Loader2, Users } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { Check, Loader2, Users, CreditCard } from "lucide-react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import type { Plan } from "@shared/schema";
+import { useState } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Plans() {
   const { data: plans, isLoading, error } = useQuery<Plan[]>({
     queryKey: ['/api/plans'],
   });
+  
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+  const [email, setEmail] = useState("");
+  const { toast } = useToast();
 
-  const scrollToContact = () => {
-    const element = document.getElementById("contato");
-    if (element) {
-      const offsetTop = element.offsetTop - 80;
-      window.scrollTo({
-        top: offsetTop,
-        behavior: "smooth",
+  const checkoutMutation = useMutation({
+    mutationFn: async (data: { planId: number }) => {
+      const response = await apiRequest("POST", "/api/create-checkout-session", data);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível processar o checkout.",
+        variant: "destructive",
       });
+    },
+  });
+
+  const handleOpenCheckout = (plan: Plan) => {
+    setSelectedPlan(plan);
+    setEmail("");
+  };
+
+  const handleCheckout = () => {
+    if (!email || !selectedPlan) {
+      toast({
+        title: "Email obrigatório",
+        description: "Por favor, informe seu email para continuar.",
+        variant: "destructive",
+      });
+      return;
     }
+
+    // Validate email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast({
+        title: "Email inválido",
+        description: "Por favor, informe um email válido.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    checkoutMutation.mutate({ planId: selectedPlan.id });
   };
 
   return (
@@ -107,7 +155,7 @@ export default function Plans() {
                 </ul>
 
                 <button
-                  onClick={scrollToContact}
+                  onClick={() => handleOpenCheckout(plan)}
                   className={`w-full py-3 rounded-lg font-semibold transition-colors ${
                     plan.popular
                       ? 'bg-primary text-primary-foreground hover:bg-primary/90'
@@ -135,6 +183,84 @@ export default function Plans() {
           </p>
         )}
       </div>
+
+      <Dialog open={!!selectedPlan} onOpenChange={() => setSelectedPlan(null)}>
+        <DialogContent className="max-w-md" data-testid="dialog-checkout">
+          <DialogHeader>
+            <DialogTitle>Contratar {selectedPlan?.name}</DialogTitle>
+            <DialogDescription>
+              Finalize sua assinatura com pagamento seguro via Stripe
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedPlan && (
+            <div className="space-y-6">
+              <div className="bg-muted p-4 rounded-lg space-y-2">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h4 className="font-semibold">{selectedPlan.name}</h4>
+                    <p className="text-sm text-muted-foreground">{selectedPlan.description}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-baseline gap-2 pt-2">
+                  <span className="text-2xl font-bold text-primary">{selectedPlan.price}</span>
+                  <span className="text-muted-foreground">{selectedPlan.period}</span>
+                </div>
+
+                {selectedPlan.dependents && (
+                  <div className="flex items-center gap-2 pt-2">
+                    <Users className="w-4 h-4 text-primary" />
+                    <span className="text-sm">
+                      {selectedPlan.dependents === 1 
+                        ? '1 pessoa coberta' 
+                        : `Até ${selectedPlan.dependents} dependentes`}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="checkout-email">Email *</Label>
+                <Input
+                  id="checkout-email"
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  data-testid="input-checkout-email"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Você receberá a confirmação e acesso ao portal neste email
+                </p>
+              </div>
+
+              <Button
+                onClick={handleCheckout}
+                className="w-full"
+                disabled={checkoutMutation.isPending}
+                data-testid="button-proceed-checkout"
+              >
+                {checkoutMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Processando...
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    Ir para Pagamento Seguro
+                  </>
+                )}
+              </Button>
+
+              <p className="text-xs text-center text-muted-foreground">
+                Pagamento processado com segurança pelo Stripe
+              </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

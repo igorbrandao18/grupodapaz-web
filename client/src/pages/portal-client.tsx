@@ -172,27 +172,27 @@ function PortalClientContent() {
               <CardDescription>Plano de proteção contratado</CardDescription>
             </CardHeader>
             <CardContent>
-              {userPlan ? (
+              {activePlan ? (
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-xl font-bold text-primary">{userPlan.name}</h3>
+                    <h3 className="text-xl font-bold text-primary">{activePlan.name}</h3>
                     <p className="text-2xl font-bold mt-2">
-                      {userPlan.price}
-                      <span className="text-sm text-muted-foreground ml-1">{userPlan.period}</span>
+                      {activePlan.price}
+                      <span className="text-sm text-muted-foreground ml-1">{activePlan.period}</span>
                     </p>
                   </div>
                   
-                  {userPlan.description && (
-                    <p className="text-sm text-muted-foreground">{userPlan.description}</p>
+                  {activePlan.description && (
+                    <p className="text-sm text-muted-foreground">{activePlan.description}</p>
                   )}
 
-                  {userPlan.dependents && (
+                  {activePlan.dependents && (
                     <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-lg">
                       <Users className="w-4 h-4 text-primary" />
                       <span className="text-sm">
-                        {userPlan.dependents === 1 
+                        {activePlan.dependents === 1 
                           ? '1 pessoa coberta' 
-                          : `Até ${userPlan.dependents} dependentes`}
+                          : `Até ${activePlan.dependents} dependentes`}
                       </span>
                     </div>
                   )}
@@ -200,7 +200,7 @@ function PortalClientContent() {
                   <div>
                     <p className="text-sm font-medium mb-2">Benefícios inclusos:</p>
                     <ul className="space-y-1">
-                      {userPlan.features.map((feature, index) => (
+                      {activePlan.features.map((feature: string, index: number) => (
                         <li key={index} className="text-sm text-muted-foreground flex items-start">
                           <span className="text-primary mr-2">✓</span>
                           {feature}
