@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { LogOut, User, Phone, Mail, CreditCard, Users, FileText, Download, Plus, Trash2, CheckCircle, Heart } from "lucide-react";
+import { LogOut, User, Phone, Mail, CreditCard, Users, FileText, Download, Plus, Trash2, CheckCircle, Heart, Loader2 } from "lucide-react";
 import ProtectedRoute from "@/components/protected-route";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -158,7 +158,7 @@ function PortalClientContent() {
                 <CardContent className="space-y-4">
                   <div>
                     <p className="text-sm text-muted-foreground">Nome</p>
-                    <p className="font-medium">{profile?.fullName || "Não informado"}</p>
+                    <p className="font-medium">{profile?.full_name || "Não informado"}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Email</p>

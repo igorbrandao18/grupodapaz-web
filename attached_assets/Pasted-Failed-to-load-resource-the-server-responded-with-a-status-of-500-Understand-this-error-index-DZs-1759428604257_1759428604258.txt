@@ -1,0 +1,35 @@
+Failed to load resource: the server responded with a status of 500 ()Understand this error
+index-DZsAO82Q.js:267 Error loading profile: Object
+u @ index-DZsAO82Q.js:267Understand this error
+wdnjrqqtsfgecokjtxaq.supabase.co/rest/v1/profiles?select=*&id=eq.560fca55-5c15-406e-b47b-51791e4aae84:1  Failed to load resource: the server responded with a status of 500 ()Understand this error
+index-DZsAO82Q.js:267 Error loading profile: Object
+u @ index-DZsAO82Q.js:267Understand this error
+wdnjrqqtsfgecokjtxaq.supabase.co/rest/v1/profiles?select=*&id=eq.560fca55-5c15-406e-b47b-51791e4aae84:1  Failed to load resource: the server responded with a status of 500 ()Understand this error
+index-DZsAO82Q.js:267 Error loading profile: Object
+u @ index-DZsAO82Q.js:267Understand this error
+wdnjrqqtsfgecokjtxaq.supabase.co/auth/v1/token?grant_type=password:1  Failed to load resource: the server responded with a status of 400 ()Understand this error
+index-DZsAO82Q.js:40 ReferenceError: Loader2 is not defined
+    at Q6 (index-DZsAO82Q.js:311:202985)
+    at Am (index-DZsAO82Q.js:38:16998)
+    at zS (index-DZsAO82Q.js:40:43963)
+    at FS (index-DZsAO82Q.js:40:39727)
+    at HO (index-DZsAO82Q.js:40:39655)
+    at Eu (index-DZsAO82Q.js:40:39508)
+    at tp (index-DZsAO82Q.js:40:35875)
+    at Zv (index-DZsAO82Q.js:40:36678)
+    at Us (index-DZsAO82Q.js:38:3274)
+    at index-DZsAO82Q.js:40:34207
+Bh @ index-DZsAO82Q.js:40Understand this error
+index-DZsAO82Q.js:38 Uncaught ReferenceError: Loader2 is not defined
+    at Q6 (index-DZsAO82Q.js:311:202985)
+    at Am (index-DZsAO82Q.js:38:16998)
+    at zS (index-DZsAO82Q.js:40:43963)
+    at FS (index-DZsAO82Q.js:40:39727)
+    at HO (index-DZsAO82Q.js:40:39655)
+    at Eu (index-DZsAO82Q.js:40:39508)
+    at tp (index-DZsAO82Q.js:40:35875)
+    at Zv (index-DZsAO82Q.js:40:36678)
+    at Us (index-DZsAO82Q.js:38:3274)
+    at index-DZsAO82Q.js:40:34207Understand this error
+wdnjrqqtsfgecokjtxaq.supabase.co/rest/v1/profiles?select=*&id=eq.560fca55-5c15-406e-b47b-51791e4aae84:1  Failed to load resource: the server responded with a status of 500 ()Understand this error
+index-DZsAO82Q.js:267 Error loading profile: Object
