@@ -15,7 +15,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { format } from "date-fns";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const dependentFormSchema = insertDependentSchema.extend({
   birthDate: z.string().optional(),
@@ -55,23 +55,26 @@ function PortalClientContent() {
     queryKey: ['/api/invoices'],
   });
 
+  // Auto-sync invoices on first load
+  const [hasAutoSynced, setHasAutoSynced] = useState(false);
+  
   const syncInvoicesMutation = useMutation({
     mutationFn: () => apiRequest("POST", "/api/invoices/sync", {}),
     onSuccess: () => {
       refetchInvoices();
-      toast({
-        title: "Faturas sincronizadas",
-        description: "Suas faturas foram atualizadas com sucesso.",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Erro",
-        description: error.message || "Não foi possível sincronizar faturas.",
-        variant: "destructive",
-      });
+      setHasAutoSynced(true);
     },
   });
+
+  // Trigger auto-sync when component mounts
+  useEffect(() => {
+    if (!hasAutoSynced && !loadingInvoices && subscriptions) {
+      const timer = setTimeout(() => {
+        syncInvoicesMutation.mutate();
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [hasAutoSynced, loadingInvoices, subscriptions]);
 
   const { data: allPlans, isLoading: loadingPlans } = useQuery<any[]>({
     queryKey: ['/api/plans'],
@@ -577,26 +580,9 @@ function PortalClientContent() {
         {/* Faturas */}
         {activeMenu === "invoices" && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Faturas</h1>
-                <p className="text-gray-600 mt-1">Histórico de pagamentos e 2ª via</p>
-              </div>
-              <Button 
-                variant="outline"
-                onClick={() => syncInvoicesMutation.mutate()}
-                disabled={syncInvoicesMutation.isPending}
-                className="border-[#28803d] text-[#28803d] hover:bg-[#28803d] hover:text-white"
-              >
-                {syncInvoicesMutation.isPending ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Sincronizando...
-                  </>
-                ) : (
-                  'Sincronizar Faturas'
-                )}
-              </Button>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Faturas</h1>
+              <p className="text-gray-600 mt-1">Histórico de pagamentos e 2ª via</p>
             </div>
 
             {loadingInvoices ? (
