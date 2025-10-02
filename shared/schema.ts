@@ -80,6 +80,7 @@ export const dependents = pgTable("dependents", {
   cpf: text("cpf").notNull(),
   birth_date: timestamp("birth_date"),
   relationship: text("relationship").notNull(),
+  photo_url: text("photo_url"),
   active: boolean("active").notNull().default(true),
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
