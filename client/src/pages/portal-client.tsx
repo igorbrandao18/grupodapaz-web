@@ -81,6 +81,10 @@ function PortalClientContent() {
     queryKey: ['/api/plans'],
   });
 
+  // Pegar assinatura e plano atual
+  const currentSubscription = subscriptions?.[0];
+  const currentPlan = allPlans?.find((p: any) => p.id === currentSubscription?.plan_id);
+
   const form = useForm<DependentFormData>({
     resolver: zodResolver(dependentFormSchema),
     defaultValues: {
@@ -158,14 +162,11 @@ function PortalClientContent() {
     window.location.href = "/";
   };
 
-  const activeSub = subscriptions?.[0];
-  const activePlan = activeSub?.plan;
-
   // Filtrar planos disponíveis para upgrade (maiores que o plano atual)
-  const currentPlanPrice = activePlan ? parseFloat(activePlan.price.replace(/[^\d,]/g, '').replace(',', '.')) : 0;
+  const currentPlanPrice = currentPlan ? parseFloat(currentPlan.price.replace(/[^\d,]/g, '').replace(',', '.')) : 0;
   const upgradeablePlans = allPlans?.filter((plan: any) => {
     const planPrice = parseFloat(plan.price.replace(/[^\d,]/g, '').replace(',', '.'));
-    return planPrice > currentPlanPrice && plan.active && plan.id !== activePlan?.id;
+    return planPrice > currentPlanPrice && plan.active && plan.id !== currentPlan?.id;
   }).sort((a: any, b: any) => {
     const priceA = parseFloat(a.price.replace(/[^\d,]/g, '').replace(',', '.'));
     const priceB = parseFloat(b.price.replace(/[^\d,]/g, '').replace(',', '.'));
@@ -262,7 +263,38 @@ function PortalClientContent() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 ml-64 p-8">
+      <main className="flex-1 ml-64 bg-gray-50">
+        {/* Header Global com Informações do Plano */}
+        {currentSubscription && currentPlan && (
+          <div className="bg-gradient-to-r from-[#28803d] to-[#1f6030] text-white px-8 py-4 shadow-md">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-6">
+                <div>
+                  <p className="text-xs text-green-100 uppercase tracking-wide">Plano Atual</p>
+                  <p className="text-xl font-bold">{currentPlan.name}</p>
+                </div>
+                <div className="h-8 w-px bg-green-300 opacity-50"></div>
+                <div>
+                  <p className="text-xs text-green-100">Cobertura</p>
+                  <p className="text-sm font-semibold">{currentPlan.max_dependents} dependentes</p>
+                </div>
+                <div className="h-8 w-px bg-green-300 opacity-50"></div>
+                <div>
+                  <p className="text-xs text-green-100">Status</p>
+                  <p className="text-sm font-semibold">
+                    {currentSubscription.status === 'active' ? '✓ Ativo' : 'Inativo'}
+                  </p>
+                </div>
+              </div>
+              <Badge className="bg-white/20 text-white border-white/30 hover:bg-white/30">
+                {currentPlan.is_popular ? 'Mais Popular' : 'Premium'}
+              </Badge>
+            </div>
+          </div>
+        )}
+
+        {/* Conteúdo das Páginas */}
+        <div className="p-8">
         {/* Dashboard */}
         {activeMenu === "dashboard" && (
           <div className="space-y-6">
@@ -278,8 +310,8 @@ function PortalClientContent() {
                   <CardTitle className="text-sm font-medium text-gray-600">Plano Ativo</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-2xl font-bold text-gray-900">{activePlan?.name || "Sem plano"}</p>
-                  {activePlan && <p className="text-sm text-gray-600 mt-1">{activePlan.price}{activePlan.period}</p>}
+                  <p className="text-2xl font-bold text-gray-900">{currentPlan?.name || "Sem plano"}</p>
+                  {currentPlan && <p className="text-sm text-gray-600 mt-1">{currentPlan.price}</p>}
                 </CardContent>
               </Card>
 
@@ -290,7 +322,7 @@ function PortalClientContent() {
                 <CardContent>
                   <p className="text-2xl font-bold text-gray-900">{dependents?.length || 0}</p>
                   <p className="text-sm text-gray-600 mt-1">
-                    {activePlan ? `Limite: ${activePlan.dependents}` : "Cadastre seu plano"}
+                    {currentPlan ? `Limite: ${currentPlan.max_dependents}` : "Cadastre seu plano"}
                   </p>
                 </CardContent>
               </Card>
@@ -353,18 +385,17 @@ function PortalClientContent() {
               <div className="flex justify-center p-12">
                 <Loader2 className="w-8 h-8 animate-spin text-[#28803d]" />
               </div>
-            ) : activePlan ? (
+            ) : currentPlan ? (
               <>
                 <Card className="overflow-hidden">
                   <div className="bg-gradient-to-r from-[#28803d] to-[#1f6030] p-8 text-white">
                     <div className="flex items-start justify-between">
                       <div>
                         <Badge className="bg-white/20 text-white mb-4">Plano Ativo</Badge>
-                        <h2 className="text-3xl font-bold mb-2">{activePlan.name}</h2>
-                        <p className="text-green-100 mb-4">{activePlan.description}</p>
+                        <h2 className="text-3xl font-bold mb-2">{currentPlan.name}</h2>
+                        <p className="text-green-100 mb-4">{currentPlan.description}</p>
                         <div className="flex items-baseline gap-2">
-                          <span className="text-4xl font-bold">{activePlan.price}</span>
-                          <span className="text-green-100">{activePlan.period}</span>
+                          <span className="text-4xl font-bold">{currentPlan.price}</span>
                         </div>
                       </div>
                       <Heart className="w-16 h-16 fill-white/20" />
@@ -379,7 +410,7 @@ function PortalClientContent() {
                         </h3>
                         <div className="bg-slate-50 p-4 rounded-lg">
                           <p className="text-2xl font-bold text-gray-900">
-                            {activePlan.dependents === 1 ? "1 pessoa" : `Até ${activePlan.dependents} dependentes`}
+                            {currentPlan.max_dependents === 1 ? "1 pessoa" : `Até ${currentPlan.max_dependents} dependentes`}
                           </p>
                           <p className="text-sm text-gray-600 mt-1">incluindo o titular</p>
                         </div>
@@ -391,7 +422,7 @@ function PortalClientContent() {
                           Benefícios Inclusos
                         </h3>
                         <ul className="space-y-2">
-                          {activePlan.features.map((feature: string, idx: number) => (
+                          {currentPlan.features?.map((feature: string, idx: number) => (
                             <li key={idx} className="flex items-start gap-2 text-sm" data-testid={`feature-${idx}`}>
                               <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
                               <span>{feature}</span>
@@ -401,16 +432,16 @@ function PortalClientContent() {
                       </div>
                     </div>
 
-                    {activeSub && (
+                    {currentSubscription && (
                       <div className="mt-6 pt-6 border-t">
                         <h3 className="font-semibold text-sm text-gray-700 mb-2">Status da Assinatura</h3>
                         <div className="flex items-center gap-4 text-sm">
                           <Badge className="bg-green-600">
-                            {activeSub.status === 'active' ? 'Ativo' : activeSub.status}
+                            {currentSubscription.status === 'active' ? 'Ativo' : currentSubscription.status}
                           </Badge>
-                          {activeSub.start_date && (
+                          {currentSubscription.start_date && (
                             <span className="text-gray-600">
-                              Desde {format(new Date(activeSub.start_date), "dd/MM/yyyy")}
+                              Desde {format(new Date(currentSubscription.start_date), "dd/MM/yyyy")}
                             </span>
                           )}
                         </div>
@@ -547,6 +578,50 @@ function PortalClientContent() {
                 </DialogContent>
               </Dialog>
             </div>
+
+            {/* Banner de Cobertura de Dependentes */}
+            {currentPlan && (
+              <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center">
+                        <Users className="w-8 h-8 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-gray-900 text-lg mb-1">
+                          Cobertura de Dependentes
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          Seu plano <span className="font-semibold text-blue-700">{currentPlan.name}</span> cobre até <span className="font-bold">{currentPlan.max_dependents} dependentes</span>
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-4xl font-bold text-blue-600">
+                          {dependents?.length || 0}
+                        </span>
+                        <span className="text-xl text-gray-500">/ {currentPlan.max_dependents}</span>
+                      </div>
+                      <p className="text-xs text-gray-600 mt-1">
+                        {(dependents?.length || 0) >= currentPlan.max_dependents 
+                          ? '🚫 Limite atingido' 
+                          : `✓ ${currentPlan.max_dependents - (dependents?.length || 0)} vagas disponíveis`
+                        }
+                      </p>
+                    </div>
+                  </div>
+                  {(dependents?.length || 0) >= currentPlan.max_dependents && (
+                    <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <p className="text-sm text-yellow-800">
+                        <strong>💡 Dica:</strong> Você atingiu o limite de dependentes do seu plano. Para adicionar mais, faça upgrade para um plano superior.
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {loadingDeps ? (
               <div className="flex justify-center p-12">
@@ -998,6 +1073,7 @@ function PortalClientContent() {
             </Card>
           </div>
         )}
+        </div>
       </main>
     </div>
   );
