@@ -1,0 +1,227 @@
+index-OUCbpjP8.js:260  GET https://wdnjrqqtsfgecokjtxaq.supabase.co/rest/v1/profiles?select=*&id=eq.560fca55-5c15-406e-b47b-51791e4aae84 500 (Internal Server Error)
+(anonymous) @ index-OUCbpjP8.js:260
+(anonymous) @ index-OUCbpjP8.js:260
+a @ index-OUCbpjP8.js:260
+Promise.then
+u @ index-OUCbpjP8.js:260
+(anonymous) @ index-OUCbpjP8.js:260
+IM @ index-OUCbpjP8.js:260
+(anonymous) @ index-OUCbpjP8.js:260
+then @ index-OUCbpjP8.js:238Understand this error
+index-OUCbpjP8.js:277 Error loading profile: {code: '42P17', details: null, hint: null, message: 'infinite recursion detected in policy for relation "profiles"'}
+u @ index-OUCbpjP8.js:277
+await in u
+(anonymous) @ index-OUCbpjP8.js:277
+(anonymous) @ index-OUCbpjP8.js:277
+_notifyAllSubscribers @ index-OUCbpjP8.js:277
+(anonymous) @ index-OUCbpjP8.js:276Understand this error
+index-OUCbpjP8.js:276 Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+na @ index-OUCbpjP8.js:276
+T3 @ index-OUCbpjP8.js:277
+_initSupabaseAuthClient @ index-OUCbpjP8.js:277
+Sk @ index-OUCbpjP8.js:277
+ul @ index-OUCbpjP8.js:277
+gj @ index-OUCbpjP8.js:48
+await in gj
+(anonymous) @ index-OUCbpjP8.js:48
+i @ index-OUCbpjP8.js:48
+g @ index-OUCbpjP8.js:48
+start @ index-OUCbpjP8.js:48
+fetch @ index-OUCbpjP8.js:48
+qa @ index-OUCbpjP8.js:48
+onSubscribe @ index-OUCbpjP8.js:48
+subscribe @ index-OUCbpjP8.js:48
+(anonymous) @ index-OUCbpjP8.js:48
+J1 @ index-OUCbpjP8.js:38
+Sd @ index-OUCbpjP8.js:40
+wo @ index-OUCbpjP8.js:40
+(anonymous) @ index-OUCbpjP8.js:40
+S @ index-OUCbpjP8.js:25
+L @ index-OUCbpjP8.js:25Understand this warning
+index-OUCbpjP8.js:260  GET https://wdnjrqqtsfgecokjtxaq.supabase.co/rest/v1/profiles?select=*&id=eq.560fca55-5c15-406e-b47b-51791e4aae84 500 (Internal Server Error)
+(anonymous) @ index-OUCbpjP8.js:260
+(anonymous) @ index-OUCbpjP8.js:260
+a @ index-OUCbpjP8.js:260
+Promise.then
+u @ index-OUCbpjP8.js:260
+(anonymous) @ index-OUCbpjP8.js:260
+IM @ index-OUCbpjP8.js:260
+(anonymous) @ index-OUCbpjP8.js:260
+then @ index-OUCbpjP8.js:238Understand this error
+index-OUCbpjP8.js:277 Error loading profile: {code: '42P17', details: null, hint: null, message: 'infinite recursion detected in policy for relation "profiles"'}
+u @ index-OUCbpjP8.js:277
+await in u
+(anonymous) @ index-OUCbpjP8.js:277
+(anonymous) @ index-OUCbpjP8.js:277
+_notifyAllSubscribers @ index-OUCbpjP8.js:277
+(anonymous) @ index-OUCbpjP8.js:276Understand this error
+index-OUCbpjP8.js:276 Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+na @ index-OUCbpjP8.js:276
+T3 @ index-OUCbpjP8.js:277
+_initSupabaseAuthClient @ index-OUCbpjP8.js:277
+Sk @ index-OUCbpjP8.js:277
+ul @ index-OUCbpjP8.js:277
+gj @ index-OUCbpjP8.js:48
+await in gj
+(anonymous) @ index-OUCbpjP8.js:48
+i @ index-OUCbpjP8.js:48
+g @ index-OUCbpjP8.js:48
+start @ index-OUCbpjP8.js:48
+fetch @ index-OUCbpjP8.js:48
+qa @ index-OUCbpjP8.js:48
+onSubscribe @ index-OUCbpjP8.js:48
+subscribe @ index-OUCbpjP8.js:48
+(anonymous) @ index-OUCbpjP8.js:48
+J1 @ index-OUCbpjP8.js:38
+Sd @ index-OUCbpjP8.js:40
+wo @ index-OUCbpjP8.js:40
+(anonymous) @ index-OUCbpjP8.js:40
+S @ index-OUCbpjP8.js:25
+L @ index-OUCbpjP8.js:25Understand this warning
+index-OUCbpjP8.js:260  GET https://wdnjrqqtsfgecokjtxaq.supabase.co/rest/v1/profiles?select=*&id=eq.560fca55-5c15-406e-b47b-51791e4aae84 500 (Internal Server Error)
+(anonymous) @ index-OUCbpjP8.js:260
+(anonymous) @ index-OUCbpjP8.js:260
+a @ index-OUCbpjP8.js:260
+Promise.then
+u @ index-OUCbpjP8.js:260
+(anonymous) @ index-OUCbpjP8.js:260
+IM @ index-OUCbpjP8.js:260
+(anonymous) @ index-OUCbpjP8.js:260
+then @ index-OUCbpjP8.js:238Understand this error
+index-OUCbpjP8.js:277 Error loading profile: {code: '42P17', details: null, hint: null, message: 'infinite recursion detected in policy for relation "profiles"'}
+u @ index-OUCbpjP8.js:277
+await in u
+(anonymous) @ index-OUCbpjP8.js:277
+(anonymous) @ index-OUCbpjP8.js:277
+_notifyAllSubscribers @ index-OUCbpjP8.js:277
+(anonymous) @ index-OUCbpjP8.js:276Understand this error
+index-OUCbpjP8.js:276 Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+na @ index-OUCbpjP8.js:276
+T3 @ index-OUCbpjP8.js:277
+_initSupabaseAuthClient @ index-OUCbpjP8.js:277
+Sk @ index-OUCbpjP8.js:277
+ul @ index-OUCbpjP8.js:277
+gj @ index-OUCbpjP8.js:48
+await in gj
+qn @ index-OUCbpjP8.js:48
+mutationFn @ index-OUCbpjP8.js:321
+fn @ index-OUCbpjP8.js:48
+g @ index-OUCbpjP8.js:48
+start @ index-OUCbpjP8.js:48
+execute @ index-OUCbpjP8.js:48
+await in execute
+mutate @ index-OUCbpjP8.js:48
+(anonymous) @ index-OUCbpjP8.js:48
+(anonymous) @ index-OUCbpjP8.js:321
+setTimeout
+(anonymous) @ index-OUCbpjP8.js:321
+Sd @ index-OUCbpjP8.js:40
+wo @ index-OUCbpjP8.js:40
+DO @ index-OUCbpjP8.js:40
+Zs @ index-OUCbpjP8.js:40
+ey @ index-OUCbpjP8.js:40
+Vs @ index-OUCbpjP8.js:38
+(anonymous) @ index-OUCbpjP8.js:40
+setTimeout
+s @ index-OUCbpjP8.js:48
+o @ index-OUCbpjP8.js:48
+batch @ index-OUCbpjP8.js:48
+Tr @ index-OUCbpjP8.js:48
+setData @ index-OUCbpjP8.js:48
+onSuccess @ index-OUCbpjP8.js:48
+f @ index-OUCbpjP8.js:48
+Promise.then
+g @ index-OUCbpjP8.js:48
+start @ index-OUCbpjP8.js:48
+fetch @ index-OUCbpjP8.js:48
+qa @ index-OUCbpjP8.js:48
+onSubscribe @ index-OUCbpjP8.js:48
+subscribe @ index-OUCbpjP8.js:48
+(anonymous) @ index-OUCbpjP8.js:48
+J1 @ index-OUCbpjP8.js:38
+Sd @ index-OUCbpjP8.js:40
+wo @ index-OUCbpjP8.js:40
+(anonymous) @ index-OUCbpjP8.js:40
+S @ index-OUCbpjP8.js:25
+L @ index-OUCbpjP8.js:25Understand this warning
+index-OUCbpjP8.js:260  GET https://wdnjrqqtsfgecokjtxaq.supabase.co/rest/v1/profiles?select=*&id=eq.560fca55-5c15-406e-b47b-51791e4aae84 500 (Internal Server Error)
+(anonymous) @ index-OUCbpjP8.js:260
+(anonymous) @ index-OUCbpjP8.js:260
+a @ index-OUCbpjP8.js:260
+Promise.then
+u @ index-OUCbpjP8.js:260
+(anonymous) @ index-OUCbpjP8.js:260
+IM @ index-OUCbpjP8.js:260
+(anonymous) @ index-OUCbpjP8.js:260
+then @ index-OUCbpjP8.js:238Understand this error
+index-OUCbpjP8.js:277 Error loading profile: {code: '42P17', details: null, hint: null, message: 'infinite recursion detected in policy for relation "profiles"'}
+u @ index-OUCbpjP8.js:277
+await in u
+(anonymous) @ index-OUCbpjP8.js:277
+(anonymous) @ index-OUCbpjP8.js:277
+_notifyAllSubscribers @ index-OUCbpjP8.js:277
+(anonymous) @ index-OUCbpjP8.js:276Understand this error
+index-OUCbpjP8.js:276 Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+na @ index-OUCbpjP8.js:276
+T3 @ index-OUCbpjP8.js:277
+_initSupabaseAuthClient @ index-OUCbpjP8.js:277
+Sk @ index-OUCbpjP8.js:277
+ul @ index-OUCbpjP8.js:277
+gj @ index-OUCbpjP8.js:48
+await in gj
+(anonymous) @ index-OUCbpjP8.js:48
+i @ index-OUCbpjP8.js:48
+g @ index-OUCbpjP8.js:48
+start @ index-OUCbpjP8.js:48
+fetch @ index-OUCbpjP8.js:48
+qa @ index-OUCbpjP8.js:48
+fetch @ index-OUCbpjP8.js:48
+refetch @ index-OUCbpjP8.js:48
+onSuccess @ index-OUCbpjP8.js:321
+execute @ index-OUCbpjP8.js:48
+await in execute
+mutate @ index-OUCbpjP8.js:48
+(anonymous) @ index-OUCbpjP8.js:48
+(anonymous) @ index-OUCbpjP8.js:321
+setTimeout
+(anonymous) @ index-OUCbpjP8.js:321
+Sd @ index-OUCbpjP8.js:40
+wo @ index-OUCbpjP8.js:40
+DO @ index-OUCbpjP8.js:40
+Zs @ index-OUCbpjP8.js:40
+ey @ index-OUCbpjP8.js:40
+Vs @ index-OUCbpjP8.js:38
+(anonymous) @ index-OUCbpjP8.js:40
+setTimeout
+s @ index-OUCbpjP8.js:48
+o @ index-OUCbpjP8.js:48
+batch @ index-OUCbpjP8.js:48
+Tr @ index-OUCbpjP8.js:48
+setData @ index-OUCbpjP8.js:48
+onSuccess @ index-OUCbpjP8.js:48
+f @ index-OUCbpjP8.js:48
+Promise.then
+g @ index-OUCbpjP8.js:48
+start @ index-OUCbpjP8.js:48
+fetch @ index-OUCbpjP8.js:48
+qa @ index-OUCbpjP8.js:48
+onSubscribe @ index-OUCbpjP8.js:48
+subscribe @ index-OUCbpjP8.js:48
+(anonymous) @ index-OUCbpjP8.js:48
+J1 @ index-OUCbpjP8.js:38
+Sd @ index-OUCbpjP8.js:40
+wo @ index-OUCbpjP8.js:40
+(anonymous) @ index-OUCbpjP8.js:40
+S @ index-OUCbpjP8.js:25
+L @ index-OUCbpjP8.js:25Understand this warning
+index-OUCbpjP8.js:260  GET https://wdnjrqqtsfgecokjtxaq.supabase.co/rest/v1/profiles?select=*&id=eq.560fca55-5c15-406e-b47b-51791e4aae84 500 (Internal Server Error)
+(anonymous) @ index-OUCbpjP8.js:260
+(anonymous) @ index-OUCbpjP8.js:260
+a @ index-OUCbpjP8.js:260
+Promise.then
+u @ index-OUCbpjP8.js:260
+(anonymous) @ index-OUCbpjP8.js:260
+IM @ index-OUCbpjP8.js:260
+(anonymous) @ index-OUCbpjP8.js:260
+then @ index-OUCbpjP8.js:238Understand this error
+index-OUCbpjP8.js:277 Error loading profile: {code: '42P17', details: null, hint: null, message: 'infinite recursion detected in policy for relation "profiles"'}
