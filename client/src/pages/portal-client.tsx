@@ -703,110 +703,135 @@ function PortalClientContent() {
 
         {/* PIX Dialog */}
         <Dialog open={pixDialogOpen} onOpenChange={setPixDialogOpen}>
-          <DialogContent className="max-w-md" data-testid="dialog-pix">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" data-testid="dialog-pix">
             <DialogHeader>
-              <DialogTitle>Pagamento via PIX ou Boleto</DialogTitle>
+              <DialogTitle className="text-2xl">Pagamento via PIX ou Boleto</DialogTitle>
               <DialogDescription>
                 Escolha a forma de pagamento para gerar a 2ª via
               </DialogDescription>
             </DialogHeader>
             
             {selectedInvoice && (
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {/* Valor */}
-                <div className="bg-slate-50 p-4 rounded-lg text-center">
-                  <p className="text-sm text-gray-600 mb-1">Valor da Fatura</p>
-                  <p className="text-3xl font-bold text-[#28803d]">
+                <div className="bg-gradient-to-r from-[#28803d] to-[#1f6030] p-6 rounded-lg text-center text-white">
+                  <p className="text-sm mb-1 text-green-100">Valor da Fatura</p>
+                  <p className="text-4xl font-bold">
                     R$ {parseFloat(selectedInvoice.amount).toFixed(2)}
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-sm mt-2 text-green-100">
                     Vencimento: {format(new Date(selectedInvoice.due_date), "dd/MM/yyyy")}
                   </p>
                 </div>
 
-                {/* PIX QR Code */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-                    <h3 className="font-semibold text-gray-900">PIX - Pagamento Instantâneo</h3>
-                  </div>
-                  
-                  {selectedInvoice.pixCode ? (
-                    <>
-                      <div className="bg-white border-2 border-green-600 rounded-lg p-4 flex flex-col items-center">
-                        <div className="bg-white p-3 rounded-lg mb-3">
-                          {/* QR Code placeholder - em produção, usar biblioteca de QR Code */}
-                          <div className="w-48 h-48 bg-gray-100 flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300">
-                            <div className="text-center">
-                              <CreditCard className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                              <p className="text-xs text-gray-500">QR Code PIX</p>
+                {/* Layout em 2 colunas */}
+                <div className="grid md:grid-cols-2 gap-6">
+                  {/* PIX QR Code */}
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 pb-2 border-b-2 border-green-600">
+                      <div className="w-3 h-3 bg-green-600 rounded-full"></div>
+                      <h3 className="font-bold text-lg text-gray-900">PIX - Pagamento Instantâneo</h3>
+                    </div>
+                    
+                    {selectedInvoice.pixCode ? (
+                      <>
+                        <div className="bg-gradient-to-br from-green-50 to-white border-2 border-green-600 rounded-xl p-6 flex flex-col items-center">
+                          <div className="bg-white p-4 rounded-xl shadow-md mb-4">
+                            {/* QR Code placeholder */}
+                            <div className="w-56 h-56 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center rounded-xl border-4 border-dashed border-gray-300">
+                              <div className="text-center">
+                                <CreditCard className="w-16 h-16 text-green-600 mx-auto mb-3" />
+                                <p className="text-sm font-semibold text-gray-700">QR Code PIX</p>
+                                <p className="text-xs text-gray-500 mt-1">Aguarde geração...</p>
+                              </div>
                             </div>
                           </div>
+                          <p className="text-sm text-gray-700 text-center font-medium">
+                            📱 Escaneie com o app do seu banco
+                          </p>
                         </div>
-                        <p className="text-xs text-gray-600 text-center mb-3">
-                          Escaneie o QR Code com o app do seu banco
-                        </p>
-                      </div>
-                      
-                      <div className="bg-slate-50 p-3 rounded-lg">
-                        <p className="text-xs font-semibold text-gray-700 mb-2">Código PIX Copia e Cola:</p>
-                        <div className="bg-white p-2 rounded border border-gray-200 font-mono text-xs break-all">
-                          {selectedInvoice.pixCode}
-                        </div>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="w-full mt-2"
-                          onClick={() => {
-                            navigator.clipboard.writeText(selectedInvoice.pixCode);
-                            toast({
-                              title: "Copiado!",
-                              description: "Código PIX copiado para área de transferência",
-                            });
-                          }}
-                        >
-                          Copiar Código PIX
-                        </Button>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
-                      <p className="text-sm text-yellow-800">PIX em processamento...</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Boleto */}
-                <div className="space-y-3 pt-4 border-t">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                    <h3 className="font-semibold text-gray-900">Boleto Bancário</h3>
-                  </div>
-                  
-                  {selectedInvoice.boletoUrl ? (
-                    <div className="space-y-2">
-                      {selectedInvoice.boletoBarcode && (
-                        <div className="bg-slate-50 p-3 rounded-lg">
-                          <p className="text-xs font-semibold text-gray-700 mb-2">Código de Barras:</p>
-                          <div className="bg-white p-2 rounded border border-gray-200 font-mono text-xs">
-                            {selectedInvoice.boletoBarcode}
+                        
+                        <div className="bg-slate-50 p-4 rounded-lg border border-gray-200">
+                          <p className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                            <CreditCard className="w-4 h-4 text-green-600" />
+                            Código PIX Copia e Cola:
+                          </p>
+                          <div className="bg-white p-3 rounded-lg border border-gray-300 font-mono text-xs break-all max-h-32 overflow-y-auto">
+                            {selectedInvoice.pixCode}
                           </div>
+                          <Button 
+                            size="sm" 
+                            className="w-full mt-3 bg-green-600 hover:bg-green-700 text-white"
+                            onClick={() => {
+                              navigator.clipboard.writeText(selectedInvoice.pixCode);
+                              toast({
+                                title: "✅ Copiado!",
+                                description: "Código PIX copiado para área de transferência",
+                              });
+                            }}
+                          >
+                            Copiar Código PIX
+                          </Button>
                         </div>
-                      )}
-                      <Button 
-                        variant="outline"
-                        className="w-full border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white"
-                        onClick={() => window.open(selectedInvoice.boletoUrl, '_blank')}
-                      >
-                        <FileText className="w-4 h-4 mr-2" />
-                        Baixar Boleto PDF
-                      </Button>
+                      </>
+                    ) : (
+                      <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-6 text-center">
+                        <Loader2 className="w-8 h-8 animate-spin text-yellow-600 mx-auto mb-2" />
+                        <p className="text-sm font-semibold text-yellow-800">PIX em processamento...</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Boleto */}
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 pb-2 border-b-2 border-blue-600">
+                      <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+                      <h3 className="font-bold text-lg text-gray-900">Boleto Bancário</h3>
                     </div>
-                  ) : (
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
-                      <p className="text-sm text-yellow-800">Boleto em processamento...</p>
-                    </div>
-                  )}
+                    
+                    {selectedInvoice.boletoUrl ? (
+                      <div className="space-y-4">
+                        <div className="bg-gradient-to-br from-blue-50 to-white border-2 border-blue-600 rounded-xl p-6">
+                          <div className="text-center mb-6">
+                            <FileText className="w-20 h-20 text-blue-600 mx-auto mb-3" />
+                            <p className="text-sm font-semibold text-gray-700">Boleto Bancário</p>
+                            <p className="text-xs text-gray-500 mt-1">Pagável em qualquer banco</p>
+                          </div>
+                          
+                          {selectedInvoice.boletoBarcode && (
+                            <div className="bg-white p-4 rounded-lg border border-gray-200 mb-4">
+                              <p className="text-xs font-bold text-gray-900 mb-2 flex items-center gap-2">
+                                <FileText className="w-4 h-4 text-blue-600" />
+                                Código de Barras:
+                              </p>
+                              <div className="bg-slate-50 p-2 rounded border border-gray-300 font-mono text-xs text-center">
+                                {selectedInvoice.boletoBarcode}
+                              </div>
+                            </div>
+                          )}
+                          
+                          <Button 
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                            onClick={() => window.open(selectedInvoice.boletoUrl, '_blank')}
+                          >
+                            <FileText className="w-4 h-4 mr-2" />
+                            Baixar Boleto PDF
+                          </Button>
+                        </div>
+                        
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                          <p className="text-xs text-blue-800 leading-relaxed">
+                            <strong>💡 Dica:</strong> Você pode pagar o boleto em qualquer banco, casa lotérica ou pelo internet banking.
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-6 text-center">
+                        <Loader2 className="w-8 h-8 animate-spin text-yellow-600 mx-auto mb-2" />
+                        <p className="text-sm font-semibold text-yellow-800">Boleto em processamento...</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
