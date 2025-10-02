@@ -656,6 +656,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             try {
               // Criar usuário no Supabase Auth
+              // O trigger handle_new_user() cria o perfil automaticamente
               const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
                 email: email,
                 password: generatedPassword,
@@ -668,20 +669,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
               
               console.log('✅ Usuário criado no Supabase Auth:', authData.user.id);
+              console.log('✅ Perfil criado automaticamente pelo trigger do Supabase');
               
-              // Criar perfil
-              const { error: profileError } = await supabaseAdmin
+              // Atualizar perfil com Stripe Customer ID
+              await supabaseAdmin
                 .from('profiles')
-                .insert({
-                  id: authData.user.id,
-                  email: email,
-                  role: 'client',
+                .update({
                   stripe_customer_id: session.customer || null,
-                });
-              
-              if (profileError) {
-                console.error('❌ Erro ao criar perfil:', profileError);
-              }
+                })
+                .eq('id', authData.user.id);
               
               // Criar subscription
               const { error: subError } = await supabaseAdmin.from('subscriptions').insert({
