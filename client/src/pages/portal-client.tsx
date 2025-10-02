@@ -607,14 +607,15 @@ function PortalClientContent() {
                               {...field} 
                               placeholder="000.000.000-00"
                               maxLength={14}
-                              onChange={(e) => {
+                              onChange={async (e) => {
                                 const formatted = formatCPF(e.target.value);
                                 const numbers = formatted.replace(/\D/g, '');
                                 field.onChange(formatted);
                                 // Valida quando CPF tiver 11 dígitos (completo)
                                 if (numbers.length === 11) {
-                                  form.trigger("cpf");
-                                } else if (numbers.length < 11 && form.formState.errors.cpf) {
+                                  // Aguarda o próximo tick para garantir que o valor foi atualizado
+                                  setTimeout(() => form.trigger("cpf"), 0);
+                                } else if (numbers.length < 11) {
                                   form.clearErrors("cpf");
                                 }
                               }}
