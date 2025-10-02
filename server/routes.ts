@@ -664,7 +664,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 email_confirm: true,
               });
               
-              // Se usuário já existe, buscar o ID existente
+              // Se usuário já existe, buscar o ID existente e atualizar a senha
               if (authError && authError.message?.includes('already been registered')) {
                 console.log('⚠️ Usuário já existe, buscando ID existente...');
                 const { data: existingUser } = await supabaseAdmin.auth.admin.listUsers();
@@ -676,7 +676,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 }
                 
                 userId = user.id;
+                
+                // Atualizar a senha do usuário existente com a nova senha gerada
+                await supabaseAdmin.auth.admin.updateUserById(userId, {
+                  password: generatedPassword,
+                });
+                
                 console.log('✅ Usando usuário existente:', userId);
+                console.log('✅ Senha atualizada para o novo pagamento');
               } else if (authError) {
                 console.error('❌ Erro ao criar usuário:', authError);
                 throw authError;
