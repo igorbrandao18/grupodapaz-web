@@ -6,20 +6,20 @@ import { z } from "zod";
 export const profiles = pgTable("profiles", {
   id: varchar("id").primaryKey(),
   email: text("email").notNull().unique(),
-  fullName: text("full_name"),
+  full_name: text("full_name"),
   phone: text("phone"),
   cpf: text("cpf"),
   role: text("role").notNull().default("client"),
-  planId: integer("plan_id"),
-  stripeCustomerId: text("stripe_customer_id"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  plan_id: integer("plan_id"),
+  stripe_customer_id: text("stripe_customer_id"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const insertProfileSchema = createInsertSchema(profiles).omit({
   id: true,
-  createdAt: true,
-  updatedAt: true,
+  created_at: true,
+  updated_at: true,
 });
 
 export type InsertProfile = z.infer<typeof insertProfileSchema>;
@@ -36,15 +36,15 @@ export const plans = pgTable("plans", {
   active: boolean("active").notNull().default(true),
   image: text("image"),
   features: text("features").array().notNull(),
-  displayOrder: integer("display_order").notNull().default(0),
-  stripePriceId: text("stripe_price_id"),
-  stripeProductId: text("stripe_product_id"),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  display_order: integer("display_order").notNull().default(0),
+  stripe_price_id: text("stripe_price_id"),
+  stripe_product_id: text("stripe_product_id"),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const insertPlanSchema = createInsertSchema(plans).omit({
   id: true,
-  updatedAt: true,
+  updated_at: true,
 });
 
 export type InsertPlan = z.infer<typeof insertPlanSchema>;
@@ -52,22 +52,22 @@ export type Plan = typeof plans.$inferSelect;
 
 export const subscriptions = pgTable("subscriptions", {
   id: serial("id").primaryKey(),
-  profileId: varchar("profile_id").notNull(),
-  planId: integer("plan_id").notNull(),
-  stripeSubscriptionId: text("stripe_subscription_id").unique(),
-  stripePriceId: text("stripe_price_id"),
+  profile_id: varchar("profile_id").notNull(),
+  plan_id: integer("plan_id").notNull(),
+  stripe_subscription_id: text("stripe_subscription_id").unique(),
+  stripe_price_id: text("stripe_price_id"),
   status: text("status").notNull().default("active"),
-  startDate: timestamp("start_date").defaultNow().notNull(),
-  endDate: timestamp("end_date"),
-  cancelAtPeriodEnd: boolean("cancel_at_period_end").default(false),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  start_date: timestamp("start_date").defaultNow().notNull(),
+  end_date: timestamp("end_date"),
+  cancel_at_period_end: boolean("cancel_at_period_end").default(false),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const insertSubscriptionSchema = createInsertSchema(subscriptions).omit({
   id: true,
-  createdAt: true,
-  updatedAt: true,
+  created_at: true,
+  updated_at: true,
 });
 
 export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
@@ -75,20 +75,20 @@ export type Subscription = typeof subscriptions.$inferSelect;
 
 export const dependents = pgTable("dependents", {
   id: serial("id").primaryKey(),
-  profileId: varchar("profile_id").notNull(),
+  profile_id: varchar("profile_id").notNull(),
   name: text("name").notNull(),
   cpf: text("cpf").notNull(),
-  birthDate: timestamp("birth_date"),
+  birth_date: timestamp("birth_date"),
   relationship: text("relationship").notNull(),
   active: boolean("active").notNull().default(true),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const insertDependentSchema = createInsertSchema(dependents).omit({
   id: true,
-  createdAt: true,
-  updatedAt: true,
+  created_at: true,
+  updated_at: true,
 });
 
 export type InsertDependent = z.infer<typeof insertDependentSchema>;
@@ -96,18 +96,18 @@ export type Dependent = typeof dependents.$inferSelect;
 
 export const payments = pgTable("payments", {
   id: serial("id").primaryKey(),
-  subscriptionId: integer("subscription_id").notNull(),
-  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  subscription_id: integer("subscription_id").notNull(),
+  stripe_payment_intent_id: text("stripe_payment_intent_id"),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
   status: text("status").notNull().default("pending"),
-  paymentMethod: text("payment_method").notNull(),
-  paidAt: timestamp("paid_at"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  payment_method: text("payment_method").notNull(),
+  paid_at: timestamp("paid_at"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const insertPaymentSchema = createInsertSchema(payments).omit({
   id: true,
-  createdAt: true,
+  created_at: true,
 });
 
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;
@@ -115,22 +115,22 @@ export type Payment = typeof payments.$inferSelect;
 
 export const invoices = pgTable("invoices", {
   id: serial("id").primaryKey(),
-  subscriptionId: integer("subscription_id").notNull(),
-  stripeInvoiceId: text("stripe_invoice_id").unique(),
+  subscription_id: integer("subscription_id").notNull(),
+  stripe_invoice_id: text("stripe_invoice_id").unique(),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
-  dueDate: timestamp("due_date").notNull(),
+  due_date: timestamp("due_date").notNull(),
   status: text("status").notNull().default("pending"),
-  hostedInvoiceUrl: text("hosted_invoice_url"),
-  invoicePdfUrl: text("invoice_pdf_url"),
-  pixCode: text("pix_code"),
-  boletoUrl: text("boleto_url"),
-  boletoBarcode: text("boleto_barcode"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  hosted_invoice_url: text("hosted_invoice_url"),
+  invoice_pdf_url: text("invoice_pdf_url"),
+  pix_code: text("pix_code"),
+  boleto_url: text("boleto_url"),
+  boleto_barcode: text("boleto_barcode"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const insertInvoiceSchema = createInsertSchema(invoices).omit({
   id: true,
-  createdAt: true,
+  created_at: true,
 });
 
 export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;

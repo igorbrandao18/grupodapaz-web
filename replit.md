@@ -6,17 +6,21 @@ The tech stack consists of:
 - **Frontend**: React with TypeScript, Vite as the build tool, Wouter for routing
 - **UI Framework**: Tailwind CSS with shadcn/ui component library (New York style)
 - **Backend**: Express.js server with TypeScript
-- **Database**: Supabase PostgreSQL for dynamic plan management (with fallback data)
+- **Database**: Supabase PostgreSQL with all tables using snake_case naming convention
 - **State Management**: TanStack Query (React Query) for server state
+- **Email**: Resend for transactional emails
 
 ## Recent Updates (October 2025)
 
 - **Complete SaaS Architecture**: Full multi-tenant system with admin and client portals
 - **Stripe Integration**: Subscription-based payments with webhook handling for automated billing
-- **Enhanced Database Schema**: 6 core tables (profiles, plans, subscriptions, dependents, payments, invoices)
+- **Enhanced Database Schema**: 6 core tables (profiles, plans, subscriptions, dependents, payments, invoices) - ALL using snake_case
 - **Client Portal**: Self-service area for viewing plans, dependents, and generating 2nd copy of invoices (PIX/Boleto)
 - **Admin Portal**: Complete management system for plans, clients, subscriptions, and payments
 - **Authentication System**: Supabase Auth with role-based access control (admin/client roles)
+- **Automated User Creation**: After successful Stripe payment, system automatically creates Supabase Auth user, profile, and subscription
+- **Welcome Emails**: Automated email delivery with login credentials via Resend integration
+- **Schema Consistency**: Fixed snake_case vs camelCase inconsistency between schema.ts and Supabase database
 
 # User Preferences
 

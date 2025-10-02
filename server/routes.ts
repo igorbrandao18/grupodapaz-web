@@ -426,7 +426,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           *,
           plan:plans(*)
         `)
-        .eq('profileId', userId)
+        .eq('profile_id', userId)
         .order('created_at', { ascending: false });
       
       if (error) {
@@ -449,7 +449,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { data: dependents, error } = await supabaseAdmin
         .from('dependents')
         .select('*')
-        .eq('profileId', userId)
+        .eq('profile_id', userId)
         .order('created_at', { ascending: false });
       
       if (error) {
@@ -470,7 +470,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.id;
       const validatedData = insertDependentSchema.parse({
         ...req.body,
-        profileId: userId,
+        profile_id: userId,
       });
       
       const { data: newDependent, error } = await supabaseAdmin
@@ -502,7 +502,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .from('dependents')
         .update({ ...updates, updated_at: new Date().toISOString() })
         .eq('id', id)
-        .eq('profileId', userId)
+        .eq('profile_id', userId)
         .select()
         .single();
       
@@ -528,7 +528,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .from('dependents')
         .delete()
         .eq('id', id)
-        .eq('profileId', userId);
+        .eq('profile_id', userId);
       
       if (error) {
         console.error('Error deleting dependent:', error);
@@ -551,7 +551,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { data: subscriptions } = await supabaseAdmin
         .from('subscriptions')
         .select('id')
-        .eq('profileId', userId);
+        .eq('profile_id', userId);
       
       if (!subscriptions || subscriptions.length === 0) {
         return res.json([]);
@@ -562,7 +562,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { data: invoices, error } = await supabaseAdmin
         .from('invoices')
         .select('*')
-        .in('subscriptionId', subscriptionIds)
+        .in('subscription_id', subscriptionIds)
         .order('created_at', { ascending: false });
       
       if (error) {
@@ -588,98 +588,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .from('invoices')
         .select(`
           *,
-          subscription:subscriptions(profileId)
+          subscription:subscriptions(profile_id)
         `)
         .eq('id', invoiceId)
         .single();
       
-      if (invoiceError || !invoice || (invoice.subscription as any)?.profileId !== userId) {
+      if (invoiceError || !invoice || (invoice.subscription as any)?.profile_id !== userId) {
         return res.status(404).json({ message: 'Invoice not found' });
       }
       
       // For now, return existing data (PIX/Boleto would be generated here)
       res.json({
-        pixCode: invoice.pixCode || 'PIX_CODE_EXAMPLE',
-        boletoUrl: invoice.boletoUrl || 'https://example.com/boleto.pdf',
-        boletoBarcode: invoice.boletoBarcode || '12345678901234567890',
+        pixCode: invoice.pix_code || 'PIX_CODE_EXAMPLE',
+        boletoUrl: invoice.boleto_url || 'https://example.com/boleto.pdf',
+        boletoBarcode: invoice.boleto_barcode || '12345678901234567890',
       });
     } catch (error) {
       console.error('Error generating copy:', error);
       res.status(500).json({ message: 'Failed to generate copy' });
-    }
-  });
-
-  // TEST ENDPOINT - Simula webhook do Stripe sem validação (APENAS DESENVOLVIMENTO)
-  app.post('/api/webhooks/stripe-test', async (req: any, res) => {
-    console.log('🧪 TEST: Simulando webhook do Stripe');
-    
-    const { email, planId } = req.body;
-    
-    if (!email || !planId) {
-      return res.status(400).json({ error: 'email e planId são obrigatórios' });
-    }
-    
-    try {
-      // Gerar senha aleatória
-      const generatedPassword = crypto.randomBytes(8).toString('hex');
-      
-      // Buscar plano
-      const { data: plan } = await supabaseAdmin
-        .from('plans')
-        .select('name')
-        .eq('id', planId)
-        .single();
-      
-      console.log('📦 Plano encontrado:', plan?.name);
-      
-      // Criar usuário no Supabase Auth
-      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-        email: email,
-        password: generatedPassword,
-        email_confirm: true,
-      });
-      
-      if (authError) {
-        console.error('❌ Erro ao criar usuário:', authError);
-        return res.status(500).json({ error: 'Erro ao criar usuário', details: authError });
-      }
-      
-      console.log('✅ Usuário criado no Supabase Auth:', authData.user.id);
-      
-      // Criar perfil
-      await supabaseAdmin.from('profiles').insert({
-        id: authData.user.id,
-        email: email,
-        role: 'client',
-      });
-      
-      console.log('✅ Perfil criado');
-      
-      // Criar subscription
-      await supabaseAdmin.from('subscriptions').insert({
-        profileId: authData.user.id,
-        planId: planId,
-        status: 'active',
-        startDate: new Date().toISOString(),
-      });
-      
-      console.log('✅ Subscription criada');
-      
-      // Enviar email de boas-vindas
-      await sendWelcomeEmail(email, generatedPassword, plan?.name || 'Plano Contratado');
-      
-      console.log('✅ Email de boas-vindas enviado para:', email);
-      
-      res.json({ 
-        success: true, 
-        message: 'Usuário criado e email enviado com sucesso!',
-        userId: authData.user.id,
-        email: email,
-        password: generatedPassword
-      });
-    } catch (error: any) {
-      console.error('❌ Erro no teste:', error);
-      res.status(500).json({ error: error.message });
     }
   });
 
@@ -750,7 +676,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   id: authData.user.id,
                   email: email,
                   role: 'client',
-                  stripeCustomerId: session.customer || null,
+                  stripe_customer_id: session.customer || null,
                 });
               
               if (profileError) {
@@ -759,11 +685,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
               
               // Criar subscription
               const { error: subError } = await supabaseAdmin.from('subscriptions').insert({
-                profileId: authData.user.id,
-                planId: planId,
-                stripeSubscriptionId: session.subscription.toString(),
+                profile_id: authData.user.id,
+                plan_id: planId,
+                stripe_subscription_id: session.subscription.toString(),
                 status: 'active',
-                startDate: new Date().toISOString(),
+                start_date: new Date().toISOString(),
               });
               
               if (subError) {
@@ -791,10 +717,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             .from('subscriptions')
             .update({
               status: subscription.status,
-              cancelAtPeriodEnd: subscription.cancel_at_period_end,
-              endDate: subscription.canceled_at ? new Date(subscription.canceled_at * 1000).toISOString() : null,
+              cancel_at_period_end: subscription.cancel_at_period_end,
+              end_date: subscription.canceled_at ? new Date(subscription.canceled_at * 1000).toISOString() : null,
             })
-            .eq('stripeSubscriptionId', subscription.id);
+            .eq('stripe_subscription_id', subscription.id);
           break;
         }
         
@@ -805,19 +731,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const { data: sub } = await supabaseAdmin
             .from('subscriptions')
             .select('id')
-            .eq('stripeSubscriptionId', invoice.subscription)
+            .eq('stripe_subscription_id', invoice.subscription)
             .single();
           
           if (sub) {
             // Create invoice record
             await supabaseAdmin.from('invoices').insert({
-              subscriptionId: sub.id,
-              stripeInvoiceId: invoice.id,
+              subscription_id: sub.id,
+              stripe_invoice_id: invoice.id,
               amount: (invoice.amount_paid / 100).toString(),
-              dueDate: new Date((invoice.due_date || Date.now() / 1000) * 1000).toISOString(),
+              due_date: new Date((invoice.due_date || Date.now() / 1000) * 1000).toISOString(),
               status: 'paid',
-              hostedInvoiceUrl: invoice.hosted_invoice_url || null,
-              invoicePdfUrl: invoice.invoice_pdf || null,
+              hosted_invoice_url: invoice.hosted_invoice_url || null,
+              invoice_pdf_url: invoice.invoice_pdf || null,
             });
           }
           break;
