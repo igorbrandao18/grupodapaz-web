@@ -552,6 +552,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/invoices', verifyAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
+      console.log('🔍 Fetching invoices for user:', userId);
       
       // Get user's subscriptions first
       const { data: subscriptions } = await supabaseAdmin
@@ -559,7 +560,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .select('id')
         .eq('profile_id', userId);
       
+      console.log('📋 User subscriptions:', subscriptions);
+      
       if (!subscriptions || subscriptions.length === 0) {
+        console.log('⚠️ No subscriptions found for user');
         return res.json([]);
       }
       
@@ -572,14 +576,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .order('created_at', { ascending: false });
       
       if (error) {
-        console.error('Error fetching invoices:', error);
+        console.error('❌ Error fetching invoices:', error);
         return res.status(500).json({ message: 'Failed to fetch invoices' });
       }
       
+      console.log('✅ Found invoices:', invoices?.length || 0);
       res.json(invoices || []);
     } catch (error) {
-      console.error('Error fetching invoices:', error);
+      console.error('❌ Error fetching invoices:', error);
       res.status(500).json({ message: 'Server error' });
+    }
+  });
+
+  // Sync invoices from Stripe
+  app.post('/api/invoices/sync', verifyAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      console.log('🔄 Syncing invoices from Stripe for user:', userId);
+      
+      // Get user's subscriptions
+      const { data: subscriptions } = await supabaseAdmin
+        .from('subscriptions')
+        .select('id, stripe_subscription_id')
+        .eq('profile_id', userId);
+      
+      if (!subscriptions || subscriptions.length === 0) {
+        return res.json({ message: 'No subscriptions found', synced: 0 });
+      }
+      
+      let syncedCount = 0;
+      
+      for (const sub of subscriptions) {
+        if (!sub.stripe_subscription_id) continue;
+        
+        try {
+          // Get invoices from Stripe for this subscription
+          const stripeInvoices = await stripe.invoices.list({
+            subscription: sub.stripe_subscription_id,
+            limit: 100,
+          });
+          
+          console.log(`📋 Found ${stripeInvoices.data.length} Stripe invoices for subscription ${sub.id}`);
+          
+          for (const invoice of stripeInvoices.data) {
+            // Check if invoice already exists
+            const { data: existing } = await supabaseAdmin
+              .from('invoices')
+              .select('id')
+              .eq('stripe_invoice_id', invoice.id)
+              .single();
+            
+            if (!existing && invoice.status === 'paid') {
+              // Create invoice
+              await supabaseAdmin.from('invoices').insert({
+                subscription_id: sub.id,
+                stripe_invoice_id: invoice.id,
+                amount: (invoice.amount_paid / 100).toString(),
+                due_date: new Date((invoice.due_date || invoice.created) * 1000).toISOString(),
+                status: 'paid',
+                hosted_invoice_url: invoice.hosted_invoice_url || null,
+                invoice_pdf_url: invoice.invoice_pdf || null,
+              });
+              
+              // Create payment record
+              await supabaseAdmin.from('payments').insert({
+                profile_id: userId,
+                subscription_id: sub.id,
+                stripe_payment_intent_id: (invoice as any).payment_intent || null,
+                amount: (invoice.amount_paid / 100).toString(),
+                status: 'succeeded',
+                payment_method: invoice.collection_method || 'card',
+              });
+              
+              syncedCount++;
+              console.log('✅ Synced invoice:', invoice.id);
+            }
+          }
+        } catch (error) {
+          console.error(`❌ Error syncing subscription ${sub.id}:`, error);
+        }
+      }
+      
+      console.log(`🎉 Sync complete! Synced ${syncedCount} invoices`);
+      res.json({ message: 'Sync complete', synced: syncedCount });
+    } catch (error: any) {
+      console.error('❌ Error syncing invoices:', error);
+      res.status(500).json({ message: error.message });
     }
   });
 
@@ -763,25 +845,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         case 'invoice.payment_succeeded': {
           const invoice = event.data.object as any;
+          console.log('💰 Invoice payment succeeded:', invoice.id);
           
           // Find subscription
           const { data: sub } = await supabaseAdmin
             .from('subscriptions')
-            .select('id')
+            .select('id, profile_id')
             .eq('stripe_subscription_id', invoice.subscription)
             .single();
           
+          console.log('📋 Found subscription:', sub);
+          
           if (sub) {
             // Create invoice record
-            await supabaseAdmin.from('invoices').insert({
-              subscription_id: sub.id,
-              stripe_invoice_id: invoice.id,
-              amount: (invoice.amount_paid / 100).toString(),
-              due_date: new Date((invoice.due_date || Date.now() / 1000) * 1000).toISOString(),
-              status: 'paid',
-              hosted_invoice_url: invoice.hosted_invoice_url || null,
-              invoice_pdf_url: invoice.invoice_pdf || null,
-            });
+            const { data: createdInvoice, error: invoiceError } = await supabaseAdmin
+              .from('invoices')
+              .insert({
+                subscription_id: sub.id,
+                stripe_invoice_id: invoice.id,
+                amount: (invoice.amount_paid / 100).toString(),
+                due_date: new Date((invoice.due_date || Date.now() / 1000) * 1000).toISOString(),
+                status: 'paid',
+                hosted_invoice_url: invoice.hosted_invoice_url || null,
+                invoice_pdf_url: invoice.invoice_pdf || null,
+              })
+              .select()
+              .single();
+            
+            if (invoiceError) {
+              console.error('❌ Error creating invoice:', invoiceError);
+            } else {
+              console.log('✅ Invoice created:', createdInvoice);
+            }
+            
+            // Create payment record
+            const { data: createdPayment, error: paymentError } = await supabaseAdmin
+              .from('payments')
+              .insert({
+                profile_id: sub.profile_id,
+                subscription_id: sub.id,
+                stripe_payment_intent_id: invoice.payment_intent,
+                amount: (invoice.amount_paid / 100).toString(),
+                status: 'succeeded',
+                payment_method: invoice.collection_method || 'card',
+              })
+              .select()
+              .single();
+            
+            if (paymentError) {
+              console.error('❌ Error creating payment:', paymentError);
+            } else {
+              console.log('✅ Payment created:', createdPayment);
+            }
           }
           break;
         }

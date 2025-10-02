@@ -51,8 +51,26 @@ function PortalClientContent() {
     queryKey: ['/api/dependents'],
   });
 
-  const { data: invoices, isLoading: loadingInvoices } = useQuery<any[]>({
+  const { data: invoices, isLoading: loadingInvoices, refetch: refetchInvoices } = useQuery<any[]>({
     queryKey: ['/api/invoices'],
+  });
+
+  const syncInvoicesMutation = useMutation({
+    mutationFn: () => apiRequest("POST", "/api/invoices/sync", {}),
+    onSuccess: () => {
+      refetchInvoices();
+      toast({
+        title: "Faturas sincronizadas",
+        description: "Suas faturas foram atualizadas com sucesso.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível sincronizar faturas.",
+        variant: "destructive",
+      });
+    },
   });
 
   const { data: allPlans, isLoading: loadingPlans } = useQuery<any[]>({
@@ -559,9 +577,26 @@ function PortalClientContent() {
         {/* Faturas */}
         {activeMenu === "invoices" && (
           <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Faturas</h1>
-              <p className="text-gray-600 mt-1">Histórico de pagamentos e 2ª via</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Faturas</h1>
+                <p className="text-gray-600 mt-1">Histórico de pagamentos e 2ª via</p>
+              </div>
+              <Button 
+                variant="outline"
+                onClick={() => syncInvoicesMutation.mutate()}
+                disabled={syncInvoicesMutation.isPending}
+                className="border-[#28803d] text-[#28803d] hover:bg-[#28803d] hover:text-white"
+              >
+                {syncInvoicesMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Sincronizando...
+                  </>
+                ) : (
+                  'Sincronizar Faturas'
+                )}
+              </Button>
             </div>
 
             {loadingInvoices ? (
