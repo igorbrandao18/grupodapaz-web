@@ -2,7 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { supabaseAdmin } from "./lib/supabaseServer";
-import { insertPlanSchema } from "@shared/schema";
+import { insertPlanSchema, insertSubscriptionSchema, insertDependentSchema, insertPaymentSchema, insertInvoiceSchema } from "@shared/schema";
+import { stripe } from "./lib/stripe";
 
 async function verifyAuth(req: any, res: any, next: any) {
   const authHeader = req.headers.authorization;
@@ -351,6 +352,363 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error updating profile:', error);
       res.status(400).json({ message: 'Invalid profile data' });
+    }
+  });
+
+  // Create Stripe checkout session for subscription
+  app.post('/api/create-checkout-session', verifyAuth, async (req: any, res) => {
+    try {
+      const { planId } = req.body;
+      const userId = req.user.id;
+      
+      // Get plan details
+      const { data: plan, error: planError } = await supabaseAdmin
+        .from('plans')
+        .select('*')
+        .eq('id', planId)
+        .single();
+      
+      if (planError || !plan) {
+        return res.status(404).json({ message: 'Plan not found' });
+      }
+      
+      if (!plan.stripePriceId) {
+        return res.status(400).json({ message: 'Plan not configured for Stripe' });
+      }
+      
+      // Get or create Stripe customer
+      const { data: profile } = await supabaseAdmin
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      let customerId = profile?.stripeCustomerId;
+      
+      if (!customerId) {
+        const customer = await stripe.customers.create({
+          email: profile?.email || req.user.email,
+          metadata: {
+            userId: userId,
+          },
+        });
+        customerId = customer.id;
+        
+        // Update profile with Stripe customer ID
+        await supabaseAdmin
+          .from('profiles')
+          .update({ stripeCustomerId: customerId })
+          .eq('id', userId);
+      }
+      
+      // Create checkout session
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        mode: 'subscription',
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price: plan.stripePriceId,
+            quantity: 1,
+          },
+        ],
+        success_url: `${req.headers.origin}/portal?success=true`,
+        cancel_url: `${req.headers.origin}/?canceled=true`,
+        metadata: {
+          userId: userId,
+          planId: planId.toString(),
+        },
+      });
+      
+      res.json({ url: session.url });
+    } catch (error: any) {
+      console.error('Error creating checkout session:', error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get subscriptions for user
+  app.get('/api/subscriptions', verifyAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      const { data: subscriptions, error } = await supabaseAdmin
+        .from('subscriptions')
+        .select(`
+          *,
+          plan:plans(*)
+        `)
+        .eq('profileId', userId)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching subscriptions:', error);
+        return res.status(500).json({ message: 'Failed to fetch subscriptions' });
+      }
+      
+      res.json(subscriptions || []);
+    } catch (error) {
+      console.error('Error fetching subscriptions:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+
+  // Get dependents for user
+  app.get('/api/dependents', verifyAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      const { data: dependents, error } = await supabaseAdmin
+        .from('dependents')
+        .select('*')
+        .eq('profileId', userId)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching dependents:', error);
+        return res.status(500).json({ message: 'Failed to fetch dependents' });
+      }
+      
+      res.json(dependents || []);
+    } catch (error) {
+      console.error('Error fetching dependents:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+
+  // Create dependent
+  app.post('/api/dependents', verifyAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const validatedData = insertDependentSchema.parse({
+        ...req.body,
+        profileId: userId,
+      });
+      
+      const { data: newDependent, error } = await supabaseAdmin
+        .from('dependents')
+        .insert([validatedData])
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error creating dependent:', error);
+        return res.status(500).json({ message: 'Failed to create dependent' });
+      }
+      
+      res.status(201).json(newDependent);
+    } catch (error) {
+      console.error('Error creating dependent:', error);
+      res.status(400).json({ message: 'Invalid dependent data' });
+    }
+  });
+
+  // Update dependent
+  app.patch('/api/dependents/:id', verifyAuth, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = req.user.id;
+      const updates = req.body;
+      
+      const { data: updatedDependent, error } = await supabaseAdmin
+        .from('dependents')
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .eq('profileId', userId)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error updating dependent:', error);
+        return res.status(500).json({ message: 'Failed to update dependent' });
+      }
+      
+      res.json(updatedDependent);
+    } catch (error) {
+      console.error('Error updating dependent:', error);
+      res.status(400).json({ message: 'Invalid dependent data' });
+    }
+  });
+
+  // Delete dependent
+  app.delete('/api/dependents/:id', verifyAuth, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = req.user.id;
+      
+      const { error } = await supabaseAdmin
+        .from('dependents')
+        .delete()
+        .eq('id', id)
+        .eq('profileId', userId);
+      
+      if (error) {
+        console.error('Error deleting dependent:', error);
+        return res.status(500).json({ message: 'Failed to delete dependent' });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting dependent:', error);
+      res.status(500).json({ message: 'Failed to delete dependent' });
+    }
+  });
+
+  // Get invoices for user
+  app.get('/api/invoices', verifyAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Get user's subscriptions first
+      const { data: subscriptions } = await supabaseAdmin
+        .from('subscriptions')
+        .select('id')
+        .eq('profileId', userId);
+      
+      if (!subscriptions || subscriptions.length === 0) {
+        return res.json([]);
+      }
+      
+      const subscriptionIds = subscriptions.map(s => s.id);
+      
+      const { data: invoices, error } = await supabaseAdmin
+        .from('invoices')
+        .select('*')
+        .in('subscriptionId', subscriptionIds)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching invoices:', error);
+        return res.status(500).json({ message: 'Failed to fetch invoices' });
+      }
+      
+      res.json(invoices || []);
+    } catch (error) {
+      console.error('Error fetching invoices:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+
+  // Generate 2nd copy (PIX/Boleto)
+  app.post('/api/invoices/:id/generate-copy', verifyAuth, async (req: any, res) => {
+    try {
+      const invoiceId = parseInt(req.params.id);
+      const userId = req.user.id;
+      
+      // Verify invoice belongs to user
+      const { data: invoice, error: invoiceError } = await supabaseAdmin
+        .from('invoices')
+        .select(`
+          *,
+          subscription:subscriptions(profileId)
+        `)
+        .eq('id', invoiceId)
+        .single();
+      
+      if (invoiceError || !invoice || (invoice.subscription as any)?.profileId !== userId) {
+        return res.status(404).json({ message: 'Invoice not found' });
+      }
+      
+      // For now, return existing data (PIX/Boleto would be generated here)
+      res.json({
+        pixCode: invoice.pixCode || 'PIX_CODE_EXAMPLE',
+        boletoUrl: invoice.boletoUrl || 'https://example.com/boleto.pdf',
+        boletoBarcode: invoice.boletoBarcode || '12345678901234567890',
+      });
+    } catch (error) {
+      console.error('Error generating copy:', error);
+      res.status(500).json({ message: 'Failed to generate copy' });
+    }
+  });
+
+  // Stripe webhook handler
+  app.post('/api/webhooks/stripe', async (req, res) => {
+    const sig = req.headers['stripe-signature'];
+    
+    if (!sig) {
+      return res.status(400).send('No signature');
+    }
+    
+    let event;
+    
+    try {
+      event = stripe.webhooks.constructEvent(
+        req.body,
+        sig,
+        process.env.STRIPE_WEBHOOK_SECRET || ''
+      );
+    } catch (err: any) {
+      console.error('Webhook signature verification failed:', err.message);
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+    
+    // Handle the event
+    try {
+      switch (event.type) {
+        case 'checkout.session.completed': {
+          const session = event.data.object;
+          const userId = session.metadata?.userId;
+          const planId = session.metadata?.planId;
+          
+          if (userId && planId && session.subscription) {
+            // Create subscription record
+            await supabaseAdmin.from('subscriptions').insert({
+              profileId: userId,
+              planId: parseInt(planId),
+              stripeSubscriptionId: session.subscription.toString(),
+              status: 'active',
+              startDate: new Date().toISOString(),
+            });
+          }
+          break;
+        }
+        
+        case 'customer.subscription.updated':
+        case 'customer.subscription.deleted': {
+          const subscription = event.data.object;
+          
+          // Update subscription status
+          await supabaseAdmin
+            .from('subscriptions')
+            .update({
+              status: subscription.status,
+              cancelAtPeriodEnd: subscription.cancel_at_period_end,
+              endDate: subscription.canceled_at ? new Date(subscription.canceled_at * 1000).toISOString() : null,
+            })
+            .eq('stripeSubscriptionId', subscription.id);
+          break;
+        }
+        
+        case 'invoice.payment_succeeded': {
+          const invoice = event.data.object;
+          
+          // Find subscription
+          const { data: sub } = await supabaseAdmin
+            .from('subscriptions')
+            .select('id')
+            .eq('stripeSubscriptionId', invoice.subscription)
+            .single();
+          
+          if (sub) {
+            // Create invoice record
+            await supabaseAdmin.from('invoices').insert({
+              subscriptionId: sub.id,
+              stripeInvoiceId: invoice.id,
+              amount: (invoice.amount_paid / 100).toString(),
+              dueDate: new Date((invoice.due_date || Date.now() / 1000) * 1000).toISOString(),
+              status: 'paid',
+              hostedInvoiceUrl: invoice.hosted_invoice_url || null,
+              invoicePdfUrl: invoice.invoice_pdf || null,
+            });
+          }
+          break;
+        }
+      }
+      
+      res.json({ received: true });
+    } catch (error) {
+      console.error('Error processing webhook:', error);
+      res.status(500).json({ error: 'Webhook processing failed' });
     }
   });
 
