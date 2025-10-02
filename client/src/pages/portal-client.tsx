@@ -20,12 +20,7 @@ import { useState, useEffect } from "react";
 
 const dependentFormSchema = insertDependentSchema.extend({
   name: z.string().min(1, "Nome é obrigatório").regex(/^[a-zA-ZÀ-ÿ\s]+$/, "Nome não pode conter números"),
-  cpf: z.string()
-    .min(14, "CPF incompleto")
-    .max(14, "CPF inválido")
-    .refine((val) => isValidCPF(val), {
-      message: "CPF inválido"
-    }),
+  cpf: z.string().min(14, "CPF incompleto").max(14),
   birthDate: z.string().optional(),
 });
 
@@ -149,8 +144,11 @@ function PortalClientContent() {
   const createDependentMutation = useMutation({
     mutationFn: async (data: DependentFormData) => {
       const payload = {
-        ...data,
-        birthDate: data.birthDate ? new Date(data.birthDate).toISOString() : null,
+        name: data.name,
+        cpf: data.cpf,
+        relationship: data.relationship,
+        birth_date: data.birthDate ? new Date(data.birthDate).toISOString() : null,
+        active: data.active,
       };
       return apiRequest("POST", "/api/dependents", payload);
     },
