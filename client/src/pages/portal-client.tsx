@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, User, CreditCard, Users, FileText, Plus, Trash2, CheckCircle, Heart, Loader2, LayoutDashboard, HelpCircle, Settings, ChevronLeft, Calendar, Check, Upload, Camera } from "lucide-react";
+import { LogOut, User, CreditCard, Users, FileText, Plus, Trash2, CheckCircle, Heart, Loader2, LayoutDashboard, HelpCircle, Settings, ChevronLeft, Calendar, Check, Upload, Camera, Search } from "lucide-react";
 import ProtectedRoute from "@/components/protected-route";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,7 +17,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { format } from "date-fns";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { uploadDependentPhoto, deleteDependentPhoto } from "@/lib/supabaseStorage";
 
 const dependentFormSchema = insertDependentSchema.extend({
@@ -91,6 +91,8 @@ function PortalClientContent() {
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("name");
 
   const { data: subscriptions, isLoading: loadingSubs } = useQuery<any[]>({
     queryKey: ['/api/subscriptions'],
@@ -132,6 +134,35 @@ function PortalClientContent() {
   // Pegar assinatura e plano atual (plano já vem na subscription via JOIN)
   const currentSubscription = subscriptions?.[0];
   const currentPlan = currentSubscription?.plan;
+
+  // Filtrar e ordenar dependentes
+  const filteredDependents = useMemo(() => {
+    if (!dependents) return [];
+    
+    let filtered = dependents.filter((dep: any) => {
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        dep.name.toLowerCase().includes(searchLower) ||
+        dep.cpf.includes(searchTerm) ||
+        dep.relationship.toLowerCase().includes(searchLower)
+      );
+    });
+    
+    // Ordenar
+    filtered.sort((a: any, b: any) => {
+      if (sortBy === "name") {
+        return a.name.localeCompare(b.name);
+      } else if (sortBy === "date") {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      } else if (sortBy === "status") {
+        if (a.active === b.active) return 0;
+        return a.active ? -1 : 1;
+      }
+      return 0;
+    });
+    
+    return filtered;
+  }, [dependents, searchTerm, sortBy]);
 
   const form = useForm<DependentFormData>({
     resolver: zodResolver(dependentFormSchema),
@@ -801,13 +832,64 @@ function PortalClientContent() {
               </Card>
             )}
 
+            {/* Cabeçalho de controles */}
+            {dependents && dependents.length > 0 && (
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex flex-col md:flex-row gap-4">
+                    {/* Campo de busca */}
+                    <div className="flex-1 relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <Input
+                        placeholder="Buscar por nome, CPF ou relacionamento..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                        data-testid="input-search-dependents"
+                      />
+                    </div>
+
+                    {/* Select de ordenação */}
+                    <div className="w-full md:w-64">
+                      <Select value={sortBy} onValueChange={setSortBy}>
+                        <SelectTrigger data-testid="select-sort-dependents">
+                          <SelectValue placeholder="Ordenar por..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="name">Nome (A-Z)</SelectItem>
+                          <SelectItem value="date">Data de Cadastro (Mais recente)</SelectItem>
+                          <SelectItem value="status">Status (Ativos primeiro)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Contadores */}
+                  <div className="mt-4 flex items-center gap-6 text-sm text-gray-600">
+                    <span data-testid="text-total-dependents">
+                      <strong className="text-gray-900">{filteredDependents.length}</strong> de <strong className="text-gray-900">{dependents.length}</strong> {filteredDependents.length === 1 ? 'resultado' : 'resultados'}
+                    </span>
+                    {searchTerm && (
+                      <button 
+                        onClick={() => setSearchTerm("")}
+                        className="text-[#28803d] hover:underline"
+                        data-testid="button-clear-search"
+                      >
+                        Limpar busca
+                      </button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {loadingDeps ? (
               <div className="flex justify-center p-12">
                 <Loader2 className="w-8 h-8 animate-spin text-[#28803d]" />
               </div>
-            ) : dependents && dependents.length > 0 ? (
-              <div className="grid md:grid-cols-2 gap-6">
-                {dependents.map((dep: any) => {
+            ) : filteredDependents.length > 0 ? (
+              <div className="space-y-4">
+                {filteredDependents.map((dep: any) => {
                   const calculateAge = (birthDate: string) => {
                     const today = new Date();
                     const birth = new Date(birthDate);
@@ -826,79 +908,83 @@ function PortalClientContent() {
                   };
 
                   return (
-                    <Card key={dep.id} data-testid={`card-dependent-${dep.id}`} className="hover:shadow-xl transition-all border-l-4 border-l-[#28803d] relative overflow-hidden">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#28803d]/5 to-transparent rounded-bl-full"></div>
-                      <CardContent className="p-6 relative">
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex items-start gap-4 flex-1">
-                            <Avatar className="w-16 h-16 shadow-lg ring-2 ring-white">
+                    <Card key={dep.id} data-testid={`card-dependent-${dep.id}`} className="hover:shadow-lg transition-all border-l-4 border-l-[#28803d]">
+                      <CardContent className="p-6">
+                        <div className="flex flex-col md:flex-row gap-6">
+                          {/* Avatar grande */}
+                          <div className="flex-shrink-0">
+                            <Avatar className="w-20 h-20 md:w-24 md:h-24 shadow-lg ring-4 ring-white">
                               <AvatarImage src={dep.photo_url || undefined} alt={dep.name} />
-                              <AvatarFallback className="bg-gradient-to-br from-[#28803d] to-[#1f6030] text-white text-lg font-bold">
+                              <AvatarFallback className="bg-gradient-to-br from-[#28803d] to-[#1f6030] text-white text-2xl font-bold">
                                 {getInitials(dep.name)}
                               </AvatarFallback>
                             </Avatar>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <h3 className="font-bold text-lg text-gray-900" data-testid={`text-dependent-name-${dep.id}`}>{dep.name}</h3>
-                                <Badge variant={dep.active ? "default" : "secondary"} className={dep.active ? "bg-green-500" : ""}>
-                                  {dep.active ? "✓ Ativo" : "Inativo"}
-                                </Badge>
+                          </div>
+
+                          {/* Informações */}
+                          <div className="flex-1 grid md:grid-cols-3 gap-6">
+                            {/* Coluna 1: Nome e status */}
+                            <div>
+                              <div className="flex items-center gap-2 mb-2">
+                                <h3 className="font-bold text-xl text-gray-900" data-testid={`text-dependent-name-${dep.id}`}>
+                                  {dep.name}
+                                </h3>
                               </div>
-                              <p className="text-sm font-medium text-[#28803d] mb-3">{dep.relationship}</p>
-                              <div className="space-y-2">
-                                <div className="flex items-center gap-2 text-sm">
-                                  <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
-                                    <CreditCard className="w-4 h-4 text-blue-600" />
-                                  </div>
-                                  <div>
-                                    <p className="text-xs text-gray-500">CPF</p>
-                                    <p className="font-mono font-medium text-gray-900">{dep.cpf}</p>
-                                  </div>
-                                </div>
-                                {dep.birth_date && (
-                                  <div className="flex items-center gap-2 text-sm">
-                                    <div className="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center">
-                                      <Calendar className="w-4 h-4 text-purple-600" />
-                                    </div>
-                                    <div>
-                                      <p className="text-xs text-gray-500">Data de Nascimento</p>
-                                      <p className="font-medium text-gray-900">
-                                        {format(new Date(dep.birth_date), "dd/MM/yyyy")}
-                                        <span className="ml-2 text-purple-600 font-semibold">
-                                          ({calculateAge(dep.birth_date)} anos)
-                                        </span>
-                                      </p>
-                                    </div>
-                                  </div>
-                                )}
-                                <div className="flex items-center gap-2 text-sm pt-2 border-t border-gray-100">
-                                  <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center">
-                                    <Check className="w-4 h-4 text-green-600" />
-                                  </div>
-                                  <div>
-                                    <p className="text-xs text-gray-500">Cadastrado em</p>
-                                    <p className="font-medium text-gray-900">
-                                      {format(new Date(dep.created_at), "dd/MM/yyyy 'às' HH:mm")}
-                                    </p>
-                                  </div>
-                                </div>
+                              <Badge variant={dep.active ? "default" : "secondary"} className={dep.active ? "bg-green-500" : ""}>
+                                {dep.active ? "✓ Ativo" : "Inativo"}
+                              </Badge>
+                              <p className="text-base font-medium text-[#28803d] mt-2">{dep.relationship}</p>
+                            </div>
+
+                            {/* Coluna 2: CPF e Idade */}
+                            <div className="space-y-3">
+                              <div>
+                                <p className="text-xs text-gray-500 mb-1">CPF</p>
+                                <p className="font-mono text-sm font-medium text-gray-900">{dep.cpf}</p>
                               </div>
+                              {dep.birth_date && (
+                                <div>
+                                  <p className="text-xs text-gray-500 mb-1">Idade</p>
+                                  <p className="text-sm font-medium text-gray-900">
+                                    {calculateAge(dep.birth_date)} anos
+                                    <span className="text-gray-500 ml-1">
+                                      ({format(new Date(dep.birth_date), "dd/MM/yyyy")})
+                                    </span>
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Coluna 3: Data de cadastro */}
+                            <div>
+                              <p className="text-xs text-gray-500 mb-1">Cadastrado em</p>
+                              <p className="text-sm font-medium text-gray-900">
+                                {format(new Date(dep.created_at), "dd/MM/yyyy")}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {format(new Date(dep.created_at), "HH:mm")}
+                              </p>
                             </div>
                           </div>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50 ml-2"
-                            onClick={() => {
-                              if (confirm(`Tem certeza que deseja remover ${dep.name}?`)) {
-                                deleteDependentMutation.mutate(dep);
-                              }
-                            }} 
-                            disabled={deleteDependentMutation.isPending} 
-                            data-testid={`button-delete-dependent-${dep.id}`}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+
+                          {/* Ações */}
+                          <div className="flex md:flex-col gap-2 items-start justify-end">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              onClick={() => {
+                                if (confirm(`Tem certeza que deseja remover ${dep.name}?`)) {
+                                  deleteDependentMutation.mutate(dep);
+                                }
+                              }} 
+                              disabled={deleteDependentMutation.isPending} 
+                              data-testid={`button-delete-dependent-${dep.id}`}
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Remover
+                            </Button>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
