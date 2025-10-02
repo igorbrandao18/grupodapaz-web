@@ -4,12 +4,60 @@ import { storage } from "./storage";
 import { supabaseAdmin } from "./lib/supabaseServer";
 import { insertPlanSchema } from "@shared/schema";
 
+async function verifyAuth(req: any, res: any, next: any) {
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+
+  const token = authHeader.split(' ')[1];
+  
+  try {
+    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+    
+    if (error || !user) {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+    
+    req.user = user;
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: 'Authentication failed' });
+  }
+}
+
+async function verifyAdmin(req: any, res: any, next: any) {
+  try {
+    const { data: profile, error } = await supabaseAdmin
+      .from('profiles')
+      .select('role')
+      .eq('id', req.user.id)
+      .single();
+    
+    if (error || !profile || profile.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+    
+    next();
+  } catch (error) {
+    return res.status(403).json({ message: 'Forbidden' });
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/config/supabase', (req, res) => {
-    res.json({
-      url: process.env.SUPABASE_URL || '',
-      anonKey: process.env.SUPABASE_ANON_KEY || ''
-    });
+    const url = process.env.SUPABASE_URL;
+    const anonKey = process.env.SUPABASE_ANON_KEY;
+    
+    if (!url || !anonKey) {
+      return res.status(500).json({ 
+        message: 'Supabase configuration missing',
+        error: 'Server environment variables not configured'
+      });
+    }
+    
+    res.json({ url, anonKey });
   });
 
   // Get active plans only (for public display)
@@ -261,8 +309,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all profiles
-  app.get('/api/profiles', async (req, res) => {
+  // Get all profiles (admin only)
+  app.get('/api/profiles', verifyAuth, verifyAdmin, async (req, res) => {
     try {
       const { data: profiles, error } = await supabaseAdmin
         .from('profiles')
@@ -271,18 +319,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (error) {
         console.error('Error fetching profiles:', error);
-        return res.json([]);
+        return res.status(500).json({ message: 'Failed to fetch profiles' });
       }
       
       res.json(profiles || []);
     } catch (error) {
       console.error('Error fetching profiles:', error);
-      res.json([]);
+      res.status(500).json({ message: 'Server error' });
     }
   });
 
-  // Update profile
-  app.patch('/api/profiles/:id', async (req, res) => {
+  // Update profile (admin only)
+  app.patch('/api/profiles/:id', verifyAuth, verifyAdmin, async (req, res) => {
     try {
       const id = req.params.id;
       const updates = req.body;

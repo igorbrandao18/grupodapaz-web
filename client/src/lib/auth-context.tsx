@@ -12,14 +12,7 @@ async function getSupabaseConfig() {
   return configPromise;
 }
 
-function getSupabaseClient(): SupabaseClient {
-  if (!supabaseInstance) {
-    supabaseInstance = createClient('https://placeholder.supabase.co', 'placeholder');
-  }
-  return supabaseInstance;
-}
-
-export const supabase = getSupabaseClient();
+export let supabase: SupabaseClient;
 
 interface AuthContextType {
   user: User | null;
