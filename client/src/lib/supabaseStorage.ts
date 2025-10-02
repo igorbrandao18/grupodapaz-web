@@ -45,3 +45,23 @@ export async function listFiles(bucket: string, folder?: string) {
   if (error) throw error;
   return data;
 }
+
+const DEPENDENT_PHOTOS_BUCKET = 'dependent-photos';
+
+export async function uploadDependentPhoto(file: File, dependentId?: number): Promise<string> {
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+  const filePath = dependentId ? `${dependentId}/${fileName}` : `temp/${fileName}`;
+
+  await uploadFile(DEPENDENT_PHOTOS_BUCKET, filePath, file);
+  const publicUrl = await getPublicUrl(DEPENDENT_PHOTOS_BUCKET, filePath);
+  
+  return publicUrl;
+}
+
+export async function deleteDependentPhoto(photoUrl: string): Promise<void> {
+  const path = photoUrl.split(`${DEPENDENT_PHOTOS_BUCKET}/`)[1];
+  if (!path) return;
+  
+  await deleteFile(DEPENDENT_PHOTOS_BUCKET, path);
+}
