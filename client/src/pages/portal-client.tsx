@@ -1,30 +1,114 @@
 import { useAuth } from "@/lib/auth-context";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import type { Plan } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogOut, User, Phone, Mail, CreditCard, Users } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { LogOut, User, Phone, Mail, CreditCard, Users, FileText, Download, Plus, Trash2, CheckCircle, Heart } from "lucide-react";
 import ProtectedRoute from "@/components/protected-route";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { insertDependentSchema } from "@shared/schema";
+import { z } from "zod";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { useState } from "react";
+
+const dependentFormSchema = insertDependentSchema.extend({
+  birthDate: z.string().optional(),
+});
+
+type DependentFormData = z.infer<typeof dependentFormSchema>;
 
 function PortalClientContent() {
   const { user, profile, signOut, isAdmin } = useAuth();
-  const [, setLocation] = (window as any).wouter?.useLocation?.() || [null, () => {}];
+  const { toast } = useToast();
+  const [addDependentOpen, setAddDependentOpen] = useState(false);
 
-  const { data: userPlan } = useQuery<Plan | null>({
-    queryKey: ['/api/plans', profile?.planId],
-    queryFn: async () => {
-      if (!profile?.planId) return null;
-      const res = await fetch(`/api/plans/${profile.planId}`);
-      if (!res.ok) return null;
-      return res.json();
+  const { data: subscriptions, isLoading: loadingSubs } = useQuery<any[]>({
+    queryKey: ['/api/subscriptions'],
+  });
+
+  const { data: dependents, isLoading: loadingDeps } = useQuery<any[]>({
+    queryKey: ['/api/dependents'],
+  });
+
+  const { data: invoices, isLoading: loadingInvoices } = useQuery<any[]>({
+    queryKey: ['/api/invoices'],
+  });
+
+  const form = useForm<DependentFormData>({
+    resolver: zodResolver(dependentFormSchema),
+    defaultValues: {
+      name: "",
+      cpf: "",
+      relationship: "",
+      birthDate: "",
+      active: true,
     },
-    enabled: !!profile?.planId,
+  });
+
+  const createDependentMutation = useMutation({
+    mutationFn: async (data: DependentFormData) => {
+      const payload = {
+        ...data,
+        birthDate: data.birthDate ? new Date(data.birthDate).toISOString() : null,
+      };
+      return apiRequest("POST", "/api/dependents", payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/dependents'] });
+      toast({
+        title: "Dependente adicionado",
+        description: "O dependente foi cadastrado com sucesso.",
+      });
+      form.reset();
+      setAddDependentOpen(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível adicionar o dependente.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteDependentMutation = useMutation({
+    mutationFn: (id: number) => apiRequest("DELETE", `/api/dependents/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/dependents'] });
+      toast({
+        title: "Dependente removido",
+        description: "O dependente foi removido com sucesso.",
+      });
+    },
+  });
+
+  const generateCopyMutation = useMutation({
+    mutationFn: (invoiceId: number) => 
+      apiRequest("POST", `/api/invoices/${invoiceId}/generate-copy`).then(res => res.json()),
+    onSuccess: (data) => {
+      toast({
+        title: "2ª Via Gerada",
+        description: "Código PIX e Boleto disponíveis.",
+      });
+    },
   });
 
   const handleSignOut = async () => {
     await signOut();
     window.location.href = "/";
   };
+
+  const activeSub = subscriptions?.[0];
+  const activePlan = activeSub?.plan;
 
   return (
     <div className="min-h-screen bg-muted">
