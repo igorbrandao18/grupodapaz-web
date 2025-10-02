@@ -15,7 +15,8 @@ The tech stack consists of:
 - **Complete SaaS Architecture**: Full multi-tenant system with admin and client portals
 - **Stripe Integration**: Subscription-based payments with webhook handling for automated billing
 - **Enhanced Database Schema**: 6 core tables (profiles, plans, subscriptions, dependents, payments, invoices) - ALL using snake_case
-- **Client Portal**: Self-service area for viewing plans, dependents, and generating 2nd copy of invoices (PIX/Boleto)
+- **Client Portal**: Self-service area for viewing plans, dependents, and payment history
+- **Professional Invoice Details Modal**: Click-to-view system with complete payment information, status, and 2nd copy generation (PIX/Boleto)
 - **Admin Portal**: Complete management system for plans, clients, subscriptions, and payments
 - **Authentication System**: Supabase Auth with role-based access control (admin/client roles)
 - **Automated User Creation**: After successful Stripe payment, system automatically creates Supabase Auth user, profile, and subscription
