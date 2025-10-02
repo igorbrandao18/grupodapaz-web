@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, User, CreditCard, Users, FileText, Plus, Trash2, CheckCircle, Heart, Loader2, LayoutDashboard, HelpCircle, Settings, ChevronLeft, Calendar, Check, Upload, Camera, Search } from "lucide-react";
+import { LogOut, User, CreditCard, Users, FileText, Plus, Trash2, CheckCircle, Heart, Loader2, LayoutDashboard, HelpCircle, Settings, ChevronLeft, Calendar, Check, Upload, Camera, Search, Pencil } from "lucide-react";
 import ProtectedRoute from "@/components/protected-route";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -88,6 +88,7 @@ function PortalClientContent() {
   const { toast } = useToast();
   const [activeMenu, setActiveMenu] = useState("dashboard");
   const [addDependentOpen, setAddDependentOpen] = useState(false);
+  const [editingDependent, setEditingDependent] = useState<any>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -178,18 +179,35 @@ function PortalClientContent() {
 
   const createDependentMutation = useMutation({
     mutationFn: async (data: DependentFormData) => {
-      let photoUrl = null;
+      let photoUrl = editingDependent?.photo_url || null;
+      const oldPhotoUrl = editingDependent?.photo_url || null;
       
+      // Se houver nova foto, fazer upload
       if (photoFile) {
         try {
-          photoUrl = await uploadDependentPhoto(photoFile);
+          // Fazer upload da nova foto primeiro
+          const newPhotoUrl = await uploadDependentPhoto(photoFile);
+          
+          // Só deletar a foto antiga se o upload foi bem-sucedido
+          if (oldPhotoUrl && newPhotoUrl) {
+            try {
+              await deleteDependentPhoto(oldPhotoUrl);
+            } catch (error) {
+              console.error('Erro ao deletar foto antiga (não crítico):', error);
+            }
+          }
+          
+          photoUrl = newPhotoUrl;
         } catch (error) {
           console.error('Erro ao fazer upload da foto:', error);
           toast({
             title: "Aviso",
-            description: "Não foi possível fazer upload da foto, mas o dependente será salvo sem foto.",
+            description: "Não foi possível fazer upload da foto. " + 
+                        (editingDependent ? "A foto anterior será mantida." : "O dependente será salvo sem foto."),
             variant: "destructive",
           });
+          // Manter a foto antiga se estiver editando
+          photoUrl = oldPhotoUrl;
         }
       }
       
@@ -201,23 +219,31 @@ function PortalClientContent() {
         photo_url: photoUrl,
         active: data.active,
       };
-      return apiRequest("POST", "/api/dependents", payload);
+      
+      if (editingDependent) {
+        return apiRequest("PATCH", `/api/dependents/${editingDependent.id}`, payload);
+      } else {
+        return apiRequest("POST", "/api/dependents", payload);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/dependents'] });
       toast({
-        title: "Dependente adicionado",
-        description: "O dependente foi cadastrado com sucesso.",
+        title: editingDependent ? "Dependente atualizado" : "Dependente adicionado",
+        description: editingDependent 
+          ? "O dependente foi atualizado com sucesso." 
+          : "O dependente foi cadastrado com sucesso.",
       });
       form.reset();
       setPhotoFile(null);
       setPhotoPreview(null);
+      setEditingDependent(null);
       setAddDependentOpen(false);
     },
     onError: (error: any) => {
       toast({
         title: "Erro",
-        description: error.message || "Não foi possível adicionar o dependente.",
+        description: error.message || `Não foi possível ${editingDependent ? 'atualizar' : 'adicionar'} o dependente.`,
         variant: "destructive",
       });
     },
@@ -280,6 +306,28 @@ function PortalClientContent() {
     if (!invoice.pixCode && !invoice.boletoUrl) {
       generatePixMutation.mutate(invoice.id);
     }
+  };
+
+  const handleEditDependent = (dependent: any) => {
+    setEditingDependent(dependent);
+    form.reset({
+      name: dependent.name,
+      cpf: dependent.cpf,
+      relationship: dependent.relationship,
+      birthDate: dependent.birth_date ? format(new Date(dependent.birth_date), "yyyy-MM-dd") : "",
+      active: dependent.active,
+    });
+    setPhotoPreview(dependent.photo_url || null);
+    setPhotoFile(null);
+    setAddDependentOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setAddDependentOpen(false);
+    setEditingDependent(null);
+    form.reset();
+    setPhotoFile(null);
+    setPhotoPreview(null);
   };
 
   const handleSignOut = async () => {
@@ -653,7 +701,9 @@ function PortalClientContent() {
                 <h1 className="text-3xl font-bold text-gray-900">Dependentes</h1>
                 <p className="text-gray-600 mt-1">Gerencie os beneficiários do seu plano</p>
               </div>
-              <Dialog open={addDependentOpen} onOpenChange={setAddDependentOpen}>
+              <Dialog open={addDependentOpen} onOpenChange={(open) => {
+                if (!open) handleCloseDialog();
+              }}>
                 <DialogTrigger asChild>
                   <Button className="bg-[#28803d] hover:bg-[#1f6030]" data-testid="button-add-dependent">
                     <Plus className="w-4 h-4 mr-2" />
@@ -662,8 +712,10 @@ function PortalClientContent() {
                 </DialogTrigger>
                 <DialogContent data-testid="dialog-add-dependent">
                   <DialogHeader>
-                    <DialogTitle>Adicionar Dependente</DialogTitle>
-                    <DialogDescription>Preencha os dados do dependente</DialogDescription>
+                    <DialogTitle>{editingDependent ? "Editar Dependente" : "Adicionar Dependente"}</DialogTitle>
+                    <DialogDescription>
+                      {editingDependent ? "Atualize os dados do dependente" : "Preencha os dados do dependente"}
+                    </DialogDescription>
                   </DialogHeader>
                   <Form {...form}>
                     <form onSubmit={form.handleSubmit((data) => createDependentMutation.mutate(data))} className="space-y-4">
@@ -780,7 +832,10 @@ function PortalClientContent() {
                         </FormItem>
                       )} />
                       <Button type="submit" className="w-full bg-[#28803d] hover:bg-[#1f6030]" disabled={createDependentMutation.isPending} data-testid="button-submit-dependent">
-                        {createDependentMutation.isPending ? "Adicionando..." : "Adicionar Dependente"}
+                        {createDependentMutation.isPending 
+                          ? (editingDependent ? "Atualizando..." : "Adicionando...") 
+                          : (editingDependent ? "Salvar Alterações" : "Adicionar Dependente")
+                        }
                       </Button>
                     </form>
                   </Form>
@@ -969,6 +1024,16 @@ function PortalClientContent() {
 
                           {/* Ações */}
                           <div className="flex md:flex-col gap-2 items-start justify-end">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="text-[#28803d] hover:text-[#1f6030] hover:bg-green-50"
+                              onClick={() => handleEditDependent(dep)}
+                              data-testid={`button-edit-dependent-${dep.id}`}
+                            >
+                              <Pencil className="w-4 h-4 mr-2" />
+                              Editar
+                            </Button>
                             <Button 
                               variant="ghost" 
                               size="sm" 
