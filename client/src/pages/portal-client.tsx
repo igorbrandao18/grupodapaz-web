@@ -7,7 +7,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { LogOut, User, CreditCard, Users, FileText, Plus, Trash2, CheckCircle, Heart, Loader2, LayoutDashboard, HelpCircle, Settings, ChevronLeft } from "lucide-react";
+import { LogOut, User, CreditCard, Users, FileText, Plus, Trash2, CheckCircle, Heart, Loader2, LayoutDashboard, HelpCircle, Settings, ChevronLeft, Calendar, Check } from "lucide-react";
 import ProtectedRoute from "@/components/protected-route";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -720,41 +720,106 @@ function PortalClientContent() {
               </div>
             ) : dependents && dependents.length > 0 ? (
               <div className="grid md:grid-cols-2 gap-6">
-                {dependents.map((dep: any) => (
-                  <Card key={dep.id} data-testid={`card-dependent-${dep.id}`} className="hover:shadow-lg transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="w-12 h-12 bg-[#28803d]/10 rounded-full flex items-center justify-center">
-                              <User className="w-6 h-6 text-[#28803d]" />
+                {dependents.map((dep: any) => {
+                  const getRelationshipIcon = (rel: string) => {
+                    const lower = rel.toLowerCase();
+                    if (lower.includes('cônjuge') || lower.includes('esposa') || lower.includes('esposo')) return '💑';
+                    if (lower.includes('filho') || lower.includes('filha')) return '👶';
+                    if (lower.includes('pai')) return '👨';
+                    if (lower.includes('mãe') || lower.includes('mae')) return '👩';
+                    if (lower.includes('irmã') || lower.includes('irmao')) return '🤝';
+                    if (lower.includes('avô') || lower.includes('avó')) return '👴';
+                    if (lower.includes('neto') || lower.includes('neta')) return '👦';
+                    return '👤';
+                  };
+                  
+                  const calculateAge = (birthDate: string) => {
+                    const today = new Date();
+                    const birth = new Date(birthDate);
+                    let age = today.getFullYear() - birth.getFullYear();
+                    const monthDiff = today.getMonth() - birth.getMonth();
+                    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+                      age--;
+                    }
+                    return age;
+                  };
+
+                  return (
+                    <Card key={dep.id} data-testid={`card-dependent-${dep.id}`} className="hover:shadow-xl transition-all border-l-4 border-l-[#28803d] relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#28803d]/5 to-transparent rounded-bl-full"></div>
+                      <CardContent className="p-6 relative">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-start gap-4 flex-1">
+                            <div className="w-14 h-14 bg-gradient-to-br from-[#28803d] to-[#1f6030] rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
+                              <span className="text-2xl">{getRelationshipIcon(dep.relationship)}</span>
                             </div>
-                            <div>
-                              <h3 className="font-semibold text-lg" data-testid={`text-dependent-name-${dep.id}`}>{dep.name}</h3>
-                              <p className="text-sm text-gray-600">{dep.relationship}</p>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h3 className="font-bold text-lg text-gray-900" data-testid={`text-dependent-name-${dep.id}`}>{dep.name}</h3>
+                                <Badge variant={dep.active ? "default" : "secondary"} className={dep.active ? "bg-green-500" : ""}>
+                                  {dep.active ? "✓ Ativo" : "Inativo"}
+                                </Badge>
+                              </div>
+                              <p className="text-sm font-medium text-[#28803d] mb-3">{dep.relationship}</p>
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2 text-sm">
+                                  <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
+                                    <CreditCard className="w-4 h-4 text-blue-600" />
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-gray-500">CPF</p>
+                                    <p className="font-mono font-medium text-gray-900">{dep.cpf}</p>
+                                  </div>
+                                </div>
+                                {dep.birth_date && (
+                                  <div className="flex items-center gap-2 text-sm">
+                                    <div className="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center">
+                                      <Calendar className="w-4 h-4 text-purple-600" />
+                                    </div>
+                                    <div>
+                                      <p className="text-xs text-gray-500">Data de Nascimento</p>
+                                      <p className="font-medium text-gray-900">
+                                        {format(new Date(dep.birth_date), "dd/MM/yyyy")}
+                                        <span className="ml-2 text-purple-600 font-semibold">
+                                          ({calculateAge(dep.birth_date)} anos)
+                                        </span>
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
+                                <div className="flex items-center gap-2 text-sm pt-2 border-t border-gray-100">
+                                  <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center">
+                                    <Check className="w-4 h-4 text-green-600" />
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-gray-500">Cadastrado em</p>
+                                    <p className="font-medium text-gray-900">
+                                      {format(new Date(dep.created_at), "dd/MM/yyyy 'às' HH:mm")}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
                           </div>
-                          <div className="space-y-1 text-sm text-gray-600">
-                            <p><span className="font-medium">CPF:</span> {dep.cpf}</p>
-                            {dep.birth_date && (
-                              <p><span className="font-medium">Nascimento:</span> {format(new Date(dep.birth_date), "dd/MM/yyyy")}</p>
-                            )}
-                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50 ml-2"
+                            onClick={() => {
+                              if (confirm(`Tem certeza que deseja remover ${dep.name}?`)) {
+                                deleteDependentMutation.mutate(dep.id);
+                              }
+                            }} 
+                            disabled={deleteDependentMutation.isPending} 
+                            data-testid={`button-delete-dependent-${dep.id}`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </div>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          onClick={() => deleteDependentMutation.mutate(dep.id)} 
-                          disabled={deleteDependentMutation.isPending} 
-                          data-testid={`button-delete-dependent-${dep.id}`}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             ) : (
               <Card>
