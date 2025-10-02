@@ -355,11 +355,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create Stripe checkout session for subscription
-  app.post('/api/create-checkout-session', verifyAuth, async (req: any, res) => {
+  // Create Stripe checkout session for subscription (PUBLIC - no auth required)
+  app.post('/api/create-checkout-session', async (req: any, res) => {
     try {
-      const { planId } = req.body;
-      const userId = req.user.id;
+      const { planId, email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: 'Email is required' });
+      }
       
       // Get plan details
       const { data: plan, error: planError } = await supabaseAdmin
@@ -376,34 +379,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Plan not configured for Stripe' });
       }
       
-      // Get or create Stripe customer
-      const { data: profile } = await supabaseAdmin
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-      
-      let customerId = profile?.stripeCustomerId;
-      
-      if (!customerId) {
-        const customer = await stripe.customers.create({
-          email: profile?.email || req.user.email,
-          metadata: {
-            userId: userId,
-          },
-        });
-        customerId = customer.id;
-        
-        // Update profile with Stripe customer ID
-        await supabaseAdmin
-          .from('profiles')
-          .update({ stripeCustomerId: customerId })
-          .eq('id', userId);
-      }
-      
-      // Create checkout session
+      // Create checkout session with customer email
+      // The webhook will handle creating the user and subscription after successful payment
       const session = await stripe.checkout.sessions.create({
-        customer: customerId,
+        customer_email: email,
         mode: 'subscription',
         payment_method_types: ['card'],
         line_items: [
@@ -415,8 +394,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success_url: `${req.headers.origin}/portal?success=true`,
         cancel_url: `${req.headers.origin}/?canceled=true`,
         metadata: {
-          userId: userId,
           planId: planId.toString(),
+          email: email,
         },
       });
       
