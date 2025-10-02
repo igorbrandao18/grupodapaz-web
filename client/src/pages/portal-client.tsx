@@ -276,7 +276,7 @@ function PortalClientContent() {
                 <div className="h-8 w-px bg-green-300 opacity-50"></div>
                 <div>
                   <p className="text-xs text-green-100">Cobertura</p>
-                  <p className="text-sm font-semibold">{currentPlan.max_dependents} dependentes</p>
+                  <p className="text-sm font-semibold">{currentPlan.dependents} dependentes</p>
                 </div>
                 <div className="h-8 w-px bg-green-300 opacity-50"></div>
                 <div>
@@ -322,7 +322,7 @@ function PortalClientContent() {
                 <CardContent>
                   <p className="text-2xl font-bold text-gray-900">{dependents?.length || 0}</p>
                   <p className="text-sm text-gray-600 mt-1">
-                    {currentPlan ? `Limite: ${currentPlan.max_dependents}` : "Cadastre seu plano"}
+                    {currentPlan ? `Limite: ${currentPlan.dependents}` : "Cadastre seu plano"}
                   </p>
                 </CardContent>
               </Card>
@@ -410,7 +410,7 @@ function PortalClientContent() {
                         </h3>
                         <div className="bg-slate-50 p-4 rounded-lg">
                           <p className="text-2xl font-bold text-gray-900">
-                            {currentPlan.max_dependents === 1 ? "1 pessoa" : `Até ${currentPlan.max_dependents} dependentes`}
+                            {currentPlan.dependents === 1 ? "1 pessoa" : `Até ${currentPlan.dependents} dependentes`}
                           </p>
                           <p className="text-sm text-gray-600 mt-1">incluindo o titular</p>
                         </div>
@@ -593,7 +593,7 @@ function PortalClientContent() {
                           Cobertura de Dependentes
                         </h3>
                         <p className="text-sm text-gray-600">
-                          Seu plano <span className="font-semibold text-blue-700">{currentPlan.name}</span> cobre até <span className="font-bold">{currentPlan.max_dependents} dependentes</span>
+                          Seu plano <span className="font-semibold text-blue-700">{currentPlan.name}</span> cobre até <span className="font-bold">{currentPlan.dependents} dependentes</span>
                         </p>
                       </div>
                     </div>
@@ -602,17 +602,17 @@ function PortalClientContent() {
                         <span className="text-4xl font-bold text-blue-600">
                           {dependents?.length || 0}
                         </span>
-                        <span className="text-xl text-gray-500">/ {currentPlan.max_dependents}</span>
+                        <span className="text-xl text-gray-500">/ {currentPlan.dependents}</span>
                       </div>
                       <p className="text-xs text-gray-600 mt-1">
-                        {(dependents?.length || 0) >= currentPlan.max_dependents 
+                        {(dependents?.length || 0) >= currentPlan.dependents 
                           ? '🚫 Limite atingido' 
-                          : `✓ ${currentPlan.max_dependents - (dependents?.length || 0)} vagas disponíveis`
+                          : `✓ ${currentPlan.dependents - (dependents?.length || 0)} vagas disponíveis`
                         }
                       </p>
                     </div>
                   </div>
-                  {(dependents?.length || 0) >= currentPlan.max_dependents && (
+                  {(dependents?.length || 0) >= currentPlan.dependents && (
                     <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                       <p className="text-sm text-yellow-800">
                         <strong>💡 Dica:</strong> Você atingiu o limite de dependentes do seu plano. Para adicionar mais, faça upgrade para um plano superior.
