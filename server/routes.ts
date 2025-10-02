@@ -610,7 +610,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Stripe webhook handler
-  app.post('/api/webhooks/stripe', async (req, res) => {
+  app.post('/api/webhooks/stripe', async (req: any, res) => {
     const sig = req.headers['stripe-signature'];
     
     if (!sig) {
@@ -620,13 +620,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     let event;
     
     try {
+      // Use rawBody captured by express.json verify function
+      const payload = req.rawBody || req.body;
       event = stripe.webhooks.constructEvent(
-        req.body,
+        payload,
         sig,
         process.env.STRIPE_WEBHOOK_SECRET || ''
       );
     } catch (err: any) {
-      console.error('Webhook signature verification failed:', err.message);
+      console.error('❌ Webhook signature verification failed:', err.message);
       return res.status(400).send(`Webhook Error: ${err.message}`);
     }
     
