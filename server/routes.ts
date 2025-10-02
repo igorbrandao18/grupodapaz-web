@@ -4,6 +4,8 @@ import { storage } from "./storage";
 import { supabaseAdmin } from "./lib/supabaseServer";
 import { insertPlanSchema, insertSubscriptionSchema, insertDependentSchema, insertPaymentSchema, insertInvoiceSchema } from "@shared/schema";
 import { stripe } from "./lib/stripe";
+import { sendWelcomeEmail } from "./lib/resend";
+import crypto from "crypto";
 
 async function verifyAuth(req: any, res: any, next: any) {
   const authHeader = req.headers.authorization;
@@ -632,19 +634,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       switch (event.type) {
         case 'checkout.session.completed': {
-          const session = event.data.object;
-          const userId = session.metadata?.userId;
+          const session = event.data.object as any;
+          const email = session.metadata?.email || session.customer_email;
           const planId = session.metadata?.planId;
           
-          if (userId && planId && session.subscription) {
-            // Create subscription record
-            await supabaseAdmin.from('subscriptions').insert({
-              profileId: userId,
-              planId: parseInt(planId),
-              stripeSubscriptionId: session.subscription.toString(),
-              status: 'active',
-              startDate: new Date().toISOString(),
-            });
+          console.log('🎉 Checkout completado:', { email, planId });
+          
+          if (email && planId && session.subscription) {
+            // Gerar senha aleatória
+            const generatedPassword = crypto.randomBytes(8).toString('hex');
+            
+            // Buscar plano
+            const { data: plan } = await supabaseAdmin
+              .from('plans')
+              .select('name')
+              .eq('id', planId)
+              .single();
+            
+            try {
+              // Criar usuário no Supabase Auth
+              const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+                email: email,
+                password: generatedPassword,
+                email_confirm: true,
+              });
+              
+              if (authError) {
+                console.error('❌ Erro ao criar usuário:', authError);
+                throw authError;
+              }
+              
+              console.log('✅ Usuário criado no Supabase Auth:', authData.user.id);
+              
+              // Criar perfil
+              const { error: profileError } = await supabaseAdmin
+                .from('profiles')
+                .insert({
+                  id: authData.user.id,
+                  email: email,
+                  role: 'client',
+                  stripeCustomerId: session.customer || null,
+                });
+              
+              if (profileError) {
+                console.error('❌ Erro ao criar perfil:', profileError);
+              }
+              
+              // Criar subscription
+              const { error: subError } = await supabaseAdmin.from('subscriptions').insert({
+                profileId: authData.user.id,
+                planId: planId,
+                stripeSubscriptionId: session.subscription.toString(),
+                status: 'active',
+                startDate: new Date().toISOString(),
+              });
+              
+              if (subError) {
+                console.error('❌ Erro ao criar subscription:', subError);
+              }
+              
+              // Enviar email de boas-vindas
+              await sendWelcomeEmail(email, generatedPassword, plan?.name || 'Plano Contratado');
+              
+              console.log('✅ Processo de onboarding concluído para:', email);
+              
+            } catch (error) {
+              console.error('❌ Erro no processo de onboarding:', error);
+            }
           }
           break;
         }
