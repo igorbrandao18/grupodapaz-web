@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { LogOut, User, CreditCard, Users, FileText, Plus, Trash2, CheckCircle, Heart, Loader2, LayoutDashboard, HelpCircle, Settings } from "lucide-react";
+import { LogOut, User, CreditCard, Users, FileText, Plus, Trash2, CheckCircle, Heart, Loader2, LayoutDashboard, HelpCircle, Settings, ChevronLeft } from "lucide-react";
 import ProtectedRoute from "@/components/protected-route";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -33,7 +33,7 @@ const menuItems: MenuItem[] = [
   { id: "dashboard", label: "Visão Geral", icon: <LayoutDashboard className="w-5 h-5" /> },
   { id: "plan", label: "Meu Plano", icon: <Heart className="w-5 h-5" /> },
   { id: "dependents", label: "Dependentes", icon: <Users className="w-5 h-5" /> },
-  { id: "invoices", label: "Pagamentos", icon: <CreditCard className="w-5 h-5" /> },
+  { id: "payments", label: "Pagamentos", icon: <CreditCard className="w-5 h-5" /> },
   { id: "profile", label: "Meu Perfil", icon: <User className="w-5 h-5" /> },
 ];
 
@@ -42,7 +42,6 @@ function PortalClientContent() {
   const { toast } = useToast();
   const [activeMenu, setActiveMenu] = useState("dashboard");
   const [addDependentOpen, setAddDependentOpen] = useState(false);
-  const [invoiceDetailsOpen, setInvoiceDetailsOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
 
   const { data: subscriptions, isLoading: loadingSubs } = useQuery<any[]>({
@@ -147,7 +146,7 @@ function PortalClientContent() {
 
   const handleViewInvoiceDetails = (invoice: any) => {
     setSelectedInvoice(invoice);
-    setInvoiceDetailsOpen(true);
+    setActiveMenu("invoice-details");
     // Auto-gerar PIX/Boleto ao abrir detalhes
     if (!invoice.pixCode && !invoice.boletoUrl) {
       generatePixMutation.mutate(invoice.id);
@@ -677,244 +676,263 @@ function PortalClientContent() {
           </div>
         )}
 
-        {/* Invoice Details Dialog */}
-        <Dialog open={invoiceDetailsOpen} onOpenChange={setInvoiceDetailsOpen}>
-          <DialogContent className="max-w-5xl p-0 gap-0 overflow-hidden max-h-[90vh] overflow-y-auto" data-testid="dialog-invoice-details">
-            {selectedInvoice && (
-              <div>
-                {/* Header Profissional */}
-                <div className="bg-white border-b px-8 py-6">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-500 mb-1">COMPROVANTE DE PAGAMENTO</p>
-                      <h2 className="text-3xl font-bold text-gray-900">Fatura #{selectedInvoice.id}</h2>
-                    </div>
-                    <Badge 
-                      className={`text-sm px-4 py-2 ${selectedInvoice.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}
-                    >
-                      {selectedInvoice.status === 'paid' ? '✓ Pagamento Confirmado' : '⏳ Aguardando Pagamento'}
-                    </Badge>
+        {/* Detalhes da Fatura - Tela Completa */}
+        {activeMenu === "invoice-details" && selectedInvoice && (
+          <div className="space-y-6">
+            {/* Botão Voltar */}
+            <div>
+              <Button
+                variant="ghost"
+                onClick={() => setActiveMenu("payments")}
+                className="mb-4"
+                data-testid="button-back-to-payments"
+              >
+                <ChevronLeft className="w-4 h-4 mr-2" />
+                Voltar para Pagamentos
+              </Button>
+            </div>
+
+            {/* Header Profissional */}
+            <div className="bg-white border rounded-lg px-8 py-6 shadow-sm">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-500 mb-1">COMPROVANTE DE PAGAMENTO</p>
+                  <h2 className="text-3xl font-bold text-gray-900">Fatura #{selectedInvoice.id}</h2>
+                </div>
+                <Badge 
+                  className={`text-sm px-4 py-2 ${selectedInvoice.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}
+                >
+                  {selectedInvoice.status === 'paid' ? '✓ Pagamento Confirmado' : '⏳ Aguardando Pagamento'}
+                </Badge>
+              </div>
+            </div>
+
+            {/* Valor em Destaque */}
+            <Card className="bg-gradient-to-br from-slate-50 to-white">
+              <CardContent className="p-8">
+                <div className="grid md:grid-cols-2 gap-8">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 mb-2">Valor Total</p>
+                    <p className="text-5xl font-bold text-[#28803d]">
+                      R$ {parseFloat(selectedInvoice.amount).toFixed(2)}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-gray-600 mb-2">Data de Vencimento</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {format(new Date(selectedInvoice.due_date), "dd/MM/yyyy")}
+                    </p>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
 
-                {/* Valor em Destaque */}
-                <div className="bg-gradient-to-br from-slate-50 to-white px-8 py-8 border-b">
-                  <div className="flex items-center justify-between">
+            {/* Informações do Pagamento */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-[#28803d]" />
+                  Detalhes do Pagamento
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
                     <div>
-                      <p className="text-sm font-medium text-gray-600 mb-2">Valor Total</p>
-                      <p className="text-5xl font-bold text-[#28803d]">
-                        R$ {parseFloat(selectedInvoice.amount).toFixed(2)}
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Data de Processamento</p>
+                      <p className="text-base font-medium text-gray-900">
+                        {selectedInvoice.created_at 
+                          ? format(new Date(selectedInvoice.created_at), "dd/MM/yyyy 'às' HH:mm") 
+                          : 'Processando...'}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-gray-600 mb-2">Data de Vencimento</p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {format(new Date(selectedInvoice.due_date), "dd/MM/yyyy")}
+                    
+                    <div>
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Status</p>
+                      <div className="flex items-center gap-2">
+                        {selectedInvoice.status === 'paid' ? (
+                          <>
+                            <CheckCircle className="w-5 h-5 text-green-600" />
+                            <span className="text-base font-semibold text-green-700">Pago e Confirmado</span>
+                          </>
+                        ) : (
+                          <>
+                            <Loader2 className="w-5 h-5 text-yellow-600" />
+                            <span className="text-base font-semibold text-yellow-700">Aguardando Pagamento</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Método de Pagamento</p>
+                      <p className="text-base font-medium text-gray-900">
+                        {selectedInvoice.payment_method || 'Cartão de Crédito'}
                       </p>
                     </div>
                   </div>
-                </div>
 
-                {/* Informações do Pagamento */}
-                <div className="px-8 py-6 bg-white">
-                  <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-[#28803d]" />
-                    Detalhes do Pagamento
-                  </h3>
-                  
-                  <div className="grid md:grid-cols-2 gap-8">
-                    <div className="space-y-4">
-                      <div>
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Data de Processamento</p>
-                        <p className="text-base font-medium text-gray-900">
-                          {selectedInvoice.created_at 
-                            ? format(new Date(selectedInvoice.created_at), "dd/MM/yyyy 'às' HH:mm") 
-                            : 'Processando...'}
-                        </p>
-                      </div>
-                      
-                      <div>
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Status</p>
-                        <div className="flex items-center gap-2">
-                          {selectedInvoice.status === 'paid' ? (
-                            <>
-                              <CheckCircle className="w-5 h-5 text-green-600" />
-                              <span className="text-base font-semibold text-green-700">Pago e Confirmado</span>
-                            </>
-                          ) : (
-                            <>
-                              <Loader2 className="w-5 h-5 text-yellow-600" />
-                              <span className="text-base font-semibold text-yellow-700">Aguardando Pagamento</span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-
-                      <div>
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Método de Pagamento</p>
-                        <p className="text-base font-medium text-gray-900">
-                          {selectedInvoice.payment_method || 'Cartão de Crédito'}
-                        </p>
-                      </div>
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">ID da Fatura</p>
+                      <p className="text-base font-mono font-medium text-gray-900 bg-slate-50 px-3 py-2 rounded">
+                        {selectedInvoice.stripe_invoice_id || `INV-${selectedInvoice.id}`}
+                      </p>
                     </div>
 
-                    <div className="space-y-4">
+                    {selectedInvoice.hosted_invoice_url && (
                       <div>
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">ID da Fatura</p>
-                        <p className="text-base font-mono font-medium text-gray-900 bg-slate-50 px-3 py-2 rounded">
-                          {selectedInvoice.stripe_invoice_id || `INV-${selectedInvoice.id}`}
-                        </p>
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Fatura Online</p>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => window.open(selectedInvoice.hosted_invoice_url, '_blank')}
+                          className="w-full justify-start"
+                        >
+                          <FileText className="w-4 h-4 mr-2" />
+                          Ver no Stripe
+                        </Button>
                       </div>
+                    )}
 
-                      {selectedInvoice.hosted_invoice_url && (
-                        <div>
-                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Fatura Online</p>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => window.open(selectedInvoice.hosted_invoice_url, '_blank')}
-                            className="w-full justify-start"
-                          >
-                            <FileText className="w-4 h-4 mr-2" />
-                            Ver no Stripe
-                          </Button>
-                        </div>
-                      )}
-
-                      {selectedInvoice.invoice_pdf_url && (
-                        <div>
-                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Baixar PDF</p>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => window.open(selectedInvoice.invoice_pdf_url, '_blank')}
-                            className="w-full justify-start"
-                          >
-                            <FileText className="w-4 h-4 mr-2" />
-                            Download PDF
-                          </Button>
-                        </div>
-                      )}
-                    </div>
+                    {selectedInvoice.invoice_pdf_url && (
+                      <div>
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Baixar PDF</p>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => window.open(selectedInvoice.invoice_pdf_url, '_blank')}
+                          className="w-full justify-start"
+                        >
+                          <FileText className="w-4 h-4 mr-2" />
+                          Download PDF
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
+              </CardContent>
+            </Card>
 
-                {/* Opções de 2ª Via */}
-                <div className="px-8 py-6 bg-slate-50 border-t">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <CreditCard className="w-5 h-5 text-[#28803d]" />
-                    Gerar 2ª Via de Pagamento
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-6">Escolha uma das opções abaixo para gerar uma segunda via:</p>
-                  
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {(selectedInvoice.pixCode || generatePixMutation.isPending) && (
-                      <Card className="border-2 border-green-200 hover:border-green-400 transition-all">
-                        <CardContent className="p-6">
-                          <div className="flex items-center gap-3 mb-4">
-                            <div className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center">
-                              <CreditCard className="w-6 h-6 text-white" />
-                            </div>
-                            <div>
-                              <h4 className="font-bold text-gray-900">PIX</h4>
-                              <p className="text-xs text-gray-600">Pagamento instantâneo</p>
-                            </div>
+            {/* Opções de 2ª Via */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="w-5 h-5 text-[#28803d]" />
+                  Gerar 2ª Via de Pagamento
+                </CardTitle>
+                <CardDescription>
+                  Escolha uma das opções abaixo para gerar uma segunda via:
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 gap-4">
+                  {(selectedInvoice.pixCode || generatePixMutation.isPending) && (
+                    <Card className="border-2 border-green-200 hover:border-green-400 transition-all">
+                      <CardContent className="p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center">
+                            <CreditCard className="w-6 h-6 text-white" />
                           </div>
-                          {selectedInvoice.pixCode ? (
-                            <div className="space-y-3">
+                          <div>
+                            <h4 className="font-bold text-gray-900">PIX</h4>
+                            <p className="text-xs text-gray-600">Pagamento instantâneo</p>
+                          </div>
+                        </div>
+                        {selectedInvoice.pixCode ? (
+                          <div className="space-y-3">
+                            <div className="bg-white rounded-lg p-3 border border-gray-200">
+                              <p className="font-mono text-xs break-all text-gray-700 line-clamp-3">
+                                {selectedInvoice.pixCode}
+                              </p>
+                            </div>
+                            <Button 
+                              className="w-full bg-green-600 hover:bg-green-700"
+                              onClick={() => {
+                                navigator.clipboard.writeText(selectedInvoice.pixCode);
+                                toast({
+                                  title: "✅ Código PIX Copiado!",
+                                  description: "Cole no app do seu banco",
+                                });
+                              }}
+                            >
+                              Copiar Código PIX
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="text-center py-4">
+                            <Loader2 className="w-6 h-6 animate-spin text-green-600 mx-auto mb-2" />
+                            <p className="text-xs text-gray-600">Gerando...</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {(selectedInvoice.boletoUrl || generatePixMutation.isPending) && (
+                    <Card className="border-2 border-blue-200 hover:border-blue-400 transition-all">
+                      <CardContent className="p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+                            <FileText className="w-6 h-6 text-white" />
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-gray-900">Boleto</h4>
+                            <p className="text-xs text-gray-600">Pague em qualquer banco</p>
+                          </div>
+                        </div>
+                        {selectedInvoice.boletoUrl ? (
+                          <div className="space-y-3">
+                            {selectedInvoice.boletoBarcode && (
                               <div className="bg-white rounded-lg p-3 border border-gray-200">
-                                <p className="font-mono text-xs break-all text-gray-700 line-clamp-3">
-                                  {selectedInvoice.pixCode}
+                                <p className="font-mono text-xs text-center text-gray-700">
+                                  {selectedInvoice.boletoBarcode}
                                 </p>
                               </div>
-                              <Button 
-                                className="w-full bg-green-600 hover:bg-green-700"
-                                onClick={() => {
-                                  navigator.clipboard.writeText(selectedInvoice.pixCode);
-                                  toast({
-                                    title: "✅ Código PIX Copiado!",
-                                    description: "Cole no app do seu banco",
-                                  });
-                                }}
-                              >
-                                Copiar Código PIX
-                              </Button>
-                            </div>
-                          ) : (
-                            <div className="text-center py-4">
-                              <Loader2 className="w-6 h-6 animate-spin text-green-600 mx-auto mb-2" />
-                              <p className="text-xs text-gray-600">Gerando...</p>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    )}
-
-                    {(selectedInvoice.boletoUrl || generatePixMutation.isPending) && (
-                      <Card className="border-2 border-blue-200 hover:border-blue-400 transition-all">
-                        <CardContent className="p-6">
-                          <div className="flex items-center gap-3 mb-4">
-                            <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
-                              <FileText className="w-6 h-6 text-white" />
-                            </div>
-                            <div>
-                              <h4 className="font-bold text-gray-900">Boleto</h4>
-                              <p className="text-xs text-gray-600">Pague em qualquer banco</p>
-                            </div>
-                          </div>
-                          {selectedInvoice.boletoUrl ? (
-                            <div className="space-y-3">
-                              {selectedInvoice.boletoBarcode && (
-                                <div className="bg-white rounded-lg p-3 border border-gray-200">
-                                  <p className="font-mono text-xs text-center text-gray-700">
-                                    {selectedInvoice.boletoBarcode}
-                                  </p>
-                                </div>
-                              )}
-                              <Button 
-                                className="w-full bg-blue-600 hover:bg-blue-700"
-                                onClick={() => window.open(selectedInvoice.boletoUrl, '_blank')}
-                              >
-                                Baixar Boleto PDF
-                              </Button>
-                            </div>
-                          ) : (
-                            <div className="text-center py-4">
-                              <Loader2 className="w-6 h-6 animate-spin text-blue-600 mx-auto mb-2" />
-                              <p className="text-xs text-gray-600">Gerando...</p>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    )}
-
-                    {!selectedInvoice.pixCode && !selectedInvoice.boletoUrl && !generatePixMutation.isPending && (
-                      <div className="col-span-2">
-                        <Card className="border-2 border-dashed border-gray-300">
-                          <CardContent className="p-8 text-center">
-                            <CreditCard className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                            <p className="text-sm font-medium text-gray-700 mb-4">
-                              {selectedInvoice.status === 'paid' 
-                                ? 'Pagamento já confirmado. Gerando opções de 2ª via...'
-                                : 'Clique para gerar PIX ou Boleto'}
-                            </p>
-                            <Button
-                              onClick={() => generatePixMutation.mutate(selectedInvoice.id)}
-                              disabled={generatePixMutation.isPending}
-                              className="bg-[#28803d] hover:bg-[#1f6030]"
+                            )}
+                            <Button 
+                              className="w-full bg-blue-600 hover:bg-blue-700"
+                              onClick={() => window.open(selectedInvoice.boletoUrl, '_blank')}
                             >
-                              Gerar PIX e Boleto
+                              Baixar Boleto PDF
                             </Button>
-                          </CardContent>
-                        </Card>
-                      </div>
-                    )}
-                  </div>
+                          </div>
+                        ) : (
+                          <div className="text-center py-4">
+                            <Loader2 className="w-6 h-6 animate-spin text-blue-600 mx-auto mb-2" />
+                            <p className="text-xs text-gray-600">Gerando...</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {!selectedInvoice.pixCode && !selectedInvoice.boletoUrl && !generatePixMutation.isPending && (
+                    <div className="col-span-2">
+                      <Card className="border-2 border-dashed border-gray-300">
+                        <CardContent className="p-8 text-center">
+                          <CreditCard className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                          <p className="text-sm font-medium text-gray-700 mb-4">
+                            {selectedInvoice.status === 'paid' 
+                              ? 'Pagamento já confirmado. Gerando opções de 2ª via...'
+                              : 'Clique para gerar PIX ou Boleto'}
+                          </p>
+                          <Button
+                            onClick={() => generatePixMutation.mutate(selectedInvoice.id)}
+                            disabled={generatePixMutation.isPending}
+                            className="bg-[#28803d] hover:bg-[#1f6030]"
+                          >
+                            Gerar PIX e Boleto
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Meu Perfil */}
         {activeMenu === "profile" && (
