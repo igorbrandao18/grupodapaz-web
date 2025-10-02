@@ -11,10 +11,12 @@ The tech stack consists of:
 
 ## Recent Updates (October 2025)
 
-- **Dynamic Plans System**: Plans now load from Supabase database with fallback mechanism
-- **Enhanced Plan Schema**: Added description, dependents count, active status, and updated_at fields
-- **Admin Interface**: Full CRUD management at `/admin/plans` for creating, editing, deleting, and toggling plan status
-- **Improved UI**: Plans display with descriptions and dependent counts in modern badge format
+- **Complete SaaS Architecture**: Full multi-tenant system with admin and client portals
+- **Stripe Integration**: Subscription-based payments with webhook handling for automated billing
+- **Enhanced Database Schema**: 6 core tables (profiles, plans, subscriptions, dependents, payments, invoices)
+- **Client Portal**: Self-service area for viewing plans, dependents, and generating 2nd copy of invoices (PIX/Boleto)
+- **Admin Portal**: Complete management system for plans, clients, subscriptions, and payments
+- **Authentication System**: Supabase Auth with role-based access control (admin/client roles)
 
 # User Preferences
 
@@ -73,21 +75,40 @@ Preferred communication style: Simple, everyday language.
 
 ## Data Layer
 
-**Database Schema (Drizzle ORM)**
-- PostgreSQL configured as the target database (using Neon serverless driver)
-- User table defined with id (UUID), username (unique), and password fields
-- Drizzle-Zod integration for schema validation
-- Migration support configured to `./migrations` directory
+**Database Schema (Supabase PostgreSQL)**
+The application uses a comprehensive schema with 6 core tables optimized for SaaS and Stripe integration:
+
+1. **profiles** - User profiles with auth integration
+   - Links to Supabase Auth (id as UUID)
+   - Stores role (admin/client), contact info, CPF, and Stripe customer ID
+   
+2. **plans** - Service plans
+   - Plan details (name, price, description, features array)
+   - Stripe integration (stripePriceId, stripeProductId)
+   - Supports dependents count, popularity flag, active status
+   
+3. **subscriptions** - Active subscriptions
+   - Links profiles to plans
+   - Stripe integration (stripeSubscriptionId, stripePriceId)
+   - Tracks status, dates, cancellation flags
+   
+4. **dependents** - Customer dependents
+   - Dependent details (name, CPF, birth date, relationship)
+   - Links to profile, supports active/inactive status
+   
+5. **payments** - Payment history
+   - Tracks all payments with Stripe integration
+   - Records amount, status, payment method, timestamps
+   
+6. **invoices** - Invoice management
+   - Stripe invoice details (stripeInvoiceId, URLs)
+   - Brazilian payment methods (PIX code, Boleto URL/barcode)
+   - Supports 2nd copy generation
 
 **Data Validation**
-- Zod schemas generated from Drizzle table definitions
+- Drizzle-Zod integration for schema validation
 - Type-safe insertions and selections with TypeScript inference
-- Validation happens at the schema definition level
-
-**Current Implementation Gap**
-- Database schema is defined but not actively used
-- In-memory storage serves as a placeholder
-- No active database connection in the codebase (storage interface exists but isn't wired to Drizzle)
+- All tables use proper insert/select schemas for API validation
 
 ## External Dependencies
 
