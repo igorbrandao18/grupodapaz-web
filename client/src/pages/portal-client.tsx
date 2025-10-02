@@ -20,7 +20,12 @@ import { useState, useEffect } from "react";
 
 const dependentFormSchema = insertDependentSchema.extend({
   name: z.string().min(1, "Nome é obrigatório").regex(/^[a-zA-ZÀ-ÿ\s]+$/, "Nome não pode conter números"),
-  cpf: z.string().min(14, "CPF inválido").max(14, "CPF inválido"),
+  cpf: z.string()
+    .min(14, "CPF incompleto")
+    .max(14, "CPF inválido")
+    .refine((val) => isValidCPF(val), {
+      message: "CPF inválido"
+    }),
   birthDate: z.string().optional(),
 });
 
@@ -47,6 +52,38 @@ const formatCPF = (value: string) => {
     .replace(/(\d{3})(\d)/, '$1.$2')
     .replace(/(\d{3})(\d)/, '$1.$2')
     .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+};
+
+// Função para validar CPF
+const isValidCPF = (cpf: string): boolean => {
+  const numbers = cpf.replace(/\D/g, '');
+  
+  if (numbers.length !== 11) return false;
+  
+  // Verifica se todos os dígitos são iguais
+  if (/^(\d)\1{10}$/.test(numbers)) return false;
+  
+  // Calcula o primeiro dígito verificador
+  let sum = 0;
+  for (let i = 0; i < 9; i++) {
+    sum += parseInt(numbers.charAt(i)) * (10 - i);
+  }
+  let firstDigit = 11 - (sum % 11);
+  if (firstDigit >= 10) firstDigit = 0;
+  
+  if (parseInt(numbers.charAt(9)) !== firstDigit) return false;
+  
+  // Calcula o segundo dígito verificador
+  sum = 0;
+  for (let i = 0; i < 10; i++) {
+    sum += parseInt(numbers.charAt(i)) * (11 - i);
+  }
+  let secondDigit = 11 - (sum % 11);
+  if (secondDigit >= 10) secondDigit = 0;
+  
+  if (parseInt(numbers.charAt(10)) !== secondDigit) return false;
+  
+  return true;
 };
 
 function PortalClientContent() {
@@ -99,6 +136,7 @@ function PortalClientContent() {
 
   const form = useForm<DependentFormData>({
     resolver: zodResolver(dependentFormSchema),
+    mode: "onBlur",
     defaultValues: {
       name: "",
       cpf: "",
@@ -571,7 +609,14 @@ function PortalClientContent() {
                               maxLength={14}
                               onChange={(e) => {
                                 const formatted = formatCPF(e.target.value);
+                                const numbers = formatted.replace(/\D/g, '');
                                 field.onChange(formatted);
+                                // Valida quando CPF tiver 11 dígitos (completo)
+                                if (numbers.length === 11) {
+                                  form.trigger("cpf");
+                                } else if (numbers.length < 11 && form.formState.errors.cpf) {
+                                  form.clearErrors("cpf");
+                                }
                               }}
                               data-testid="input-dependent-cpf" 
                             />
