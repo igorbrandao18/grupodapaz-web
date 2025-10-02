@@ -3,18 +3,23 @@ import { createClient, type User, type Session, type SupabaseClient } from "@sup
 import type { Profile } from "@shared/schema";
 
 let supabaseInstance: SupabaseClient | null = null;
+let configPromise: Promise<any> | null = null;
 
-async function getSupabaseClient() {
-  if (supabaseInstance) return supabaseInstance;
-  
-  const response = await fetch('/api/config/supabase');
-  const config = await response.json();
-  
-  supabaseInstance = createClient(config.url, config.anonKey);
+async function getSupabaseConfig() {
+  if (!configPromise) {
+    configPromise = fetch('/api/config/supabase').then(r => r.json());
+  }
+  return configPromise;
+}
+
+function getSupabaseClient(): SupabaseClient {
+  if (!supabaseInstance) {
+    supabaseInstance = createClient('https://placeholder.supabase.co', 'placeholder');
+  }
   return supabaseInstance;
 }
 
-export const supabase = await getSupabaseClient();
+export const supabase = getSupabaseClient();
 
 interface AuthContextType {
   user: User | null;
@@ -36,7 +41,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    let mounted = true;
+    
+    async function initAuth() {
+      try {
+        const config = await getSupabaseConfig();
+        supabaseInstance = createClient(config.url, config.anonKey);
+        
+        const { data: { session } } = await supabaseInstance.auth.getSession();
+        
+        if (mounted) {
+          setSession(session);
+          setUser(session?.user ?? null);
+          if (session?.user) {
+            await loadProfile(session.user.id);
+          } else {
+            setLoading(false);
+          }
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    }
+    
+    initAuth();
+    
+    return () => {
+      mounted = false;
+    };
+  }, []);
+  
+  useEffect(() => {
+    if (!supabaseInstance) return;
+    
+    supabaseInstance.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -48,7 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabaseInstance.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -60,11 +101,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [supabaseInstance]);
 
   const loadProfile = async (userId: string) => {
+    if (!supabaseInstance) return;
+    
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseInstance
         .from("profiles")
         .select("*")
         .eq("id", userId)
@@ -83,7 +126,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    if (!supabaseInstance) throw new Error('Supabase not initialized');
+    
+    const { error } = await supabaseInstance.auth.signInWithPassword({
       email,
       password,
     });
@@ -91,7 +136,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, fullName: string, phone?: string) => {
-    const { data, error } = await supabase.auth.signUp({
+    if (!supabaseInstance) throw new Error('Supabase not initialized');
+    
+    const { data, error } = await supabaseInstance.auth.signUp({
       email,
       password,
     });
@@ -99,7 +146,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
 
     if (data.user) {
-      const { error: profileError } = await supabase.from("profiles").insert({
+      const { error: profileError } = await supabaseInstance.from("profiles").insert({
         id: data.user.id,
         email,
         full_name: fullName,
@@ -114,7 +161,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
+    if (!supabaseInstance) throw new Error('Supabase not initialized');
+    
+    const { error } = await supabaseInstance.auth.signOut();
     if (error) throw error;
   };
 
