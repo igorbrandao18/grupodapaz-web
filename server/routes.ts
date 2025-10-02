@@ -194,7 +194,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create a new plan
-  app.post('/api/plans', async (req, res) => {
+  app.post('/api/plans', verifyAuth, verifyAdmin, async (req, res) => {
     try {
       const validatedData = insertPlanSchema.parse(req.body);
       
@@ -217,7 +217,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update a plan
-  app.patch('/api/plans/:id', async (req, res) => {
+  app.patch('/api/plans/:id', verifyAuth, verifyAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
@@ -242,7 +242,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update plan status (active/inactive)
-  app.patch('/api/plans/:id/status', async (req, res) => {
+  app.patch('/api/plans/:id/status', verifyAuth, verifyAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const { active } = req.body;
@@ -267,7 +267,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete a plan
-  app.delete('/api/plans/:id', async (req, res) => {
+  app.delete('/api/plans/:id', verifyAuth, verifyAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       
@@ -680,7 +680,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         case 'invoice.payment_succeeded': {
-          const invoice = event.data.object;
+          const invoice = event.data.object as any;
           
           // Find subscription
           const { data: sub } = await supabaseAdmin
