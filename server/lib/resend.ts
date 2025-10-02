@@ -34,7 +34,8 @@ export async function getUncachableResendClient() {
   const {apiKey, fromEmail} = await getCredentials();
   return {
     client: new Resend(apiKey),
-    fromEmail: fromEmail || 'noreply@grupodapaz.com'
+    // Use onboarding@resend.dev for testing - para produção, configure domínio próprio no Resend
+    fromEmail: 'onboarding@resend.dev'
   };
 }
 

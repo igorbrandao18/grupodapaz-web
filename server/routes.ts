@@ -609,6 +609,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // TEST ENDPOINT - Simula webhook do Stripe sem validação (APENAS DESENVOLVIMENTO)
+  app.post('/api/webhooks/stripe-test', async (req: any, res) => {
+    console.log('🧪 TEST: Simulando webhook do Stripe');
+    
+    const { email, planId } = req.body;
+    
+    if (!email || !planId) {
+      return res.status(400).json({ error: 'email e planId são obrigatórios' });
+    }
+    
+    try {
+      // Gerar senha aleatória
+      const generatedPassword = crypto.randomBytes(8).toString('hex');
+      
+      // Buscar plano
+      const { data: plan } = await supabaseAdmin
+        .from('plans')
+        .select('name')
+        .eq('id', planId)
+        .single();
+      
+      console.log('📦 Plano encontrado:', plan?.name);
+      
+      // Criar usuário no Supabase Auth
+      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email: email,
+        password: generatedPassword,
+        email_confirm: true,
+      });
+      
+      if (authError) {
+        console.error('❌ Erro ao criar usuário:', authError);
+        return res.status(500).json({ error: 'Erro ao criar usuário', details: authError });
+      }
+      
+      console.log('✅ Usuário criado no Supabase Auth:', authData.user.id);
+      
+      // Criar perfil
+      await supabaseAdmin.from('profiles').insert({
+        id: authData.user.id,
+        email: email,
+        role: 'client',
+      });
+      
+      console.log('✅ Perfil criado');
+      
+      // Criar subscription
+      await supabaseAdmin.from('subscriptions').insert({
+        profileId: authData.user.id,
+        planId: planId,
+        status: 'active',
+        startDate: new Date().toISOString(),
+      });
+      
+      console.log('✅ Subscription criada');
+      
+      // Enviar email de boas-vindas
+      await sendWelcomeEmail(email, generatedPassword, plan?.name || 'Plano Contratado');
+      
+      console.log('✅ Email de boas-vindas enviado para:', email);
+      
+      res.json({ 
+        success: true, 
+        message: 'Usuário criado e email enviado com sucesso!',
+        userId: authData.user.id,
+        email: email,
+        password: generatedPassword
+      });
+    } catch (error: any) {
+      console.error('❌ Erro no teste:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Stripe webhook handler
   app.post('/api/webhooks/stripe', async (req: any, res) => {
     const sig = req.headers['stripe-signature'];
