@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { LogOut, User, CreditCard, Users, FileText, Plus, Trash2, CheckCircle, Heart, Loader2, LayoutDashboard, HelpCircle, Settings, ChevronLeft } from "lucide-react";
 import ProtectedRoute from "@/components/protected-route";
@@ -18,6 +19,8 @@ import { format } from "date-fns";
 import { useState, useEffect } from "react";
 
 const dependentFormSchema = insertDependentSchema.extend({
+  name: z.string().min(1, "Nome é obrigatório").regex(/^[a-zA-ZÀ-ÿ\s]+$/, "Nome não pode conter números"),
+  cpf: z.string().min(14, "CPF inválido").max(14, "CPF inválido"),
   birthDate: z.string().optional(),
 });
 
@@ -36,6 +39,15 @@ const menuItems: MenuItem[] = [
   { id: "payments", label: "Pagamentos", icon: <CreditCard className="w-5 h-5" /> },
   { id: "profile", label: "Meu Perfil", icon: <User className="w-5 h-5" /> },
 ];
+
+// Função para formatar CPF com máscara
+const formatCPF = (value: string) => {
+  const numbers = value.replace(/\D/g, '').slice(0, 11);
+  return numbers
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+};
 
 function PortalClientContent() {
   const { user, profile, signOut, isAdmin } = useAuth();
@@ -552,14 +564,41 @@ function PortalClientContent() {
                       <FormField control={form.control} name="cpf" render={({ field }) => (
                         <FormItem>
                           <FormLabel>CPF</FormLabel>
-                          <FormControl><Input {...field} data-testid="input-dependent-cpf" /></FormControl>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              placeholder="000.000.000-00"
+                              maxLength={14}
+                              onChange={(e) => {
+                                const formatted = formatCPF(e.target.value);
+                                field.onChange(formatted);
+                              }}
+                              data-testid="input-dependent-cpf" 
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
                       <FormField control={form.control} name="relationship" render={({ field }) => (
                         <FormItem>
                           <FormLabel>Parentesco</FormLabel>
-                          <FormControl><Input {...field} placeholder="Ex: Cônjuge, Filho(a)" data-testid="input-dependent-relationship" /></FormControl>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-dependent-relationship">
+                                <SelectValue placeholder="Selecione o parentesco" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="Cônjuge">Cônjuge</SelectItem>
+                              <SelectItem value="Filho(a)">Filho(a)</SelectItem>
+                              <SelectItem value="Pai">Pai</SelectItem>
+                              <SelectItem value="Mãe">Mãe</SelectItem>
+                              <SelectItem value="Irmão(ã)">Irmão(ã)</SelectItem>
+                              <SelectItem value="Avô(ó)">Avô(ó)</SelectItem>
+                              <SelectItem value="Neto(a)">Neto(a)</SelectItem>
+                              <SelectItem value="Outro">Outro</SelectItem>
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )} />
@@ -582,40 +621,40 @@ function PortalClientContent() {
             {/* Banner de Cobertura de Dependentes */}
             {currentPlan && (
               <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-                <CardContent className="p-6">
+                <CardContent className="p-4">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center">
-                        <Users className="w-8 h-8 text-white" />
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+                        <Users className="w-6 h-6 text-white" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-gray-900 text-lg mb-1">
+                        <h3 className="font-semibold text-gray-900 text-base mb-0.5">
                           Cobertura de Dependentes
                         </h3>
-                        <p className="text-sm text-gray-600">
-                          Seu plano <span className="font-semibold text-blue-700">{currentPlan.name}</span> cobre até <span className="font-bold">{currentPlan.dependents} dependentes</span>
+                        <p className="text-xs text-gray-600">
+                          Plano <span className="font-semibold text-blue-700">{currentPlan.name}</span> - até <span className="font-bold">{currentPlan.dependents} dependentes</span>
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-4xl font-bold text-blue-600">
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-3xl font-bold text-blue-600">
                           {dependents?.length || 0}
                         </span>
-                        <span className="text-xl text-gray-500">/ {currentPlan.dependents}</span>
+                        <span className="text-lg text-gray-500">/ {currentPlan.dependents}</span>
                       </div>
-                      <p className="text-xs text-gray-600 mt-1">
+                      <p className="text-xs text-gray-600">
                         {(dependents?.length || 0) >= currentPlan.dependents 
                           ? '🚫 Limite atingido' 
-                          : `✓ ${currentPlan.dependents - (dependents?.length || 0)} vagas disponíveis`
+                          : `✓ ${currentPlan.dependents - (dependents?.length || 0)} disponíveis`
                         }
                       </p>
                     </div>
                   </div>
                   {(dependents?.length || 0) >= currentPlan.dependents && (
-                    <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <p className="text-sm text-yellow-800">
-                        <strong>💡 Dica:</strong> Você atingiu o limite de dependentes do seu plano. Para adicionar mais, faça upgrade para um plano superior.
+                    <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <p className="text-xs text-yellow-800">
+                        <strong>💡 Dica:</strong> Limite atingido. Faça upgrade para adicionar mais dependentes.
                       </p>
                     </div>
                   )}
