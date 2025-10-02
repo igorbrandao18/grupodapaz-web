@@ -655,21 +655,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
               .single();
             
             try {
-              // Criar usuário no Supabase Auth
-              // O trigger handle_new_user() cria o perfil automaticamente
+              let userId: string;
+              
+              // Tentar criar usuário no Supabase Auth
               const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
                 email: email,
                 password: generatedPassword,
                 email_confirm: true,
               });
               
-              if (authError) {
+              // Se usuário já existe, buscar o ID existente
+              if (authError && authError.message?.includes('already been registered')) {
+                console.log('⚠️ Usuário já existe, buscando ID existente...');
+                const { data: existingUser } = await supabaseAdmin.auth.admin.listUsers();
+                const user = existingUser?.users.find(u => u.email === email);
+                
+                if (!user) {
+                  console.error('❌ Não foi possível encontrar usuário existente');
+                  throw new Error('Usuário não encontrado');
+                }
+                
+                userId = user.id;
+                console.log('✅ Usando usuário existente:', userId);
+              } else if (authError) {
                 console.error('❌ Erro ao criar usuário:', authError);
                 throw authError;
+              } else {
+                userId = authData!.user.id;
+                console.log('✅ Usuário criado no Supabase Auth:', userId);
+                console.log('✅ Perfil criado automaticamente pelo trigger do Supabase');
               }
-              
-              console.log('✅ Usuário criado no Supabase Auth:', authData.user.id);
-              console.log('✅ Perfil criado automaticamente pelo trigger do Supabase');
               
               // Atualizar perfil com Stripe Customer ID
               await supabaseAdmin
@@ -677,19 +692,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 .update({
                   stripe_customer_id: session.customer || null,
                 })
-                .eq('id', authData.user.id);
+                .eq('id', userId);
               
-              // Criar subscription
-              const { error: subError } = await supabaseAdmin.from('subscriptions').insert({
-                profile_id: authData.user.id,
-                plan_id: planId,
-                stripe_subscription_id: session.subscription.toString(),
-                status: 'active',
-                start_date: new Date().toISOString(),
-              });
+              // Verificar se já existe subscription para este Stripe subscription ID
+              const { data: existingSub } = await supabaseAdmin
+                .from('subscriptions')
+                .select('id')
+                .eq('stripe_subscription_id', session.subscription.toString())
+                .single();
               
-              if (subError) {
-                console.error('❌ Erro ao criar subscription:', subError);
+              if (!existingSub) {
+                // Criar subscription
+                const { error: subError } = await supabaseAdmin.from('subscriptions').insert({
+                  profile_id: userId,
+                  plan_id: planId,
+                  stripe_subscription_id: session.subscription.toString(),
+                  status: 'active',
+                  start_date: new Date().toISOString(),
+                });
+                
+                if (subError) {
+                  console.error('❌ Erro ao criar subscription:', subError);
+                } else {
+                  console.log('✅ Subscription criada');
+                }
+              } else {
+                console.log('⚠️ Subscription já existe para este Stripe ID');
               }
               
               // Enviar email de boas-vindas
