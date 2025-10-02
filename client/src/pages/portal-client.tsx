@@ -18,7 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { format } from "date-fns";
 import { useState, useEffect } from "react";
-import { uploadDependentPhoto } from "@/lib/supabaseStorage";
+import { uploadDependentPhoto, deleteDependentPhoto } from "@/lib/supabaseStorage";
 
 const dependentFormSchema = insertDependentSchema.extend({
   name: z.string().min(1, "Nome é obrigatório").regex(/^[a-zA-ZÀ-ÿ\s]+$/, "Nome não pode conter números"),
@@ -193,13 +193,37 @@ function PortalClientContent() {
   });
 
   const deleteDependentMutation = useMutation({
-    mutationFn: (id: number) => apiRequest("DELETE", `/api/dependents/${id}`),
-    onSuccess: () => {
+    mutationFn: async (dependent: any) => {
+      let photoDeleteFailed = false;
+      
+      // Deletar foto do storage primeiro (se existir)
+      if (dependent.photo_url) {
+        try {
+          await deleteDependentPhoto(dependent.photo_url);
+        } catch (error) {
+          console.error('Erro ao deletar foto:', error);
+          photoDeleteFailed = true;
+        }
+      }
+      
+      const result = await apiRequest("DELETE", `/api/dependents/${dependent.id}`);
+      return { result, photoDeleteFailed };
+    },
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['/api/dependents'] });
-      toast({
-        title: "Dependente removido",
-        description: "O dependente foi removido com sucesso.",
-      });
+      
+      if (data.photoDeleteFailed) {
+        toast({
+          title: "Dependente removido",
+          description: "Dependente removido, mas não foi possível deletar a foto do storage.",
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Dependente removido",
+          description: "O dependente foi removido com sucesso.",
+        });
+      }
     },
   });
 
@@ -867,7 +891,7 @@ function PortalClientContent() {
                             className="text-red-600 hover:text-red-700 hover:bg-red-50 ml-2"
                             onClick={() => {
                               if (confirm(`Tem certeza que deseja remover ${dep.name}?`)) {
-                                deleteDependentMutation.mutate(dep.id);
+                                deleteDependentMutation.mutate(dep);
                               }
                             }} 
                             disabled={deleteDependentMutation.isPending} 
