@@ -55,6 +55,10 @@ function PortalClientContent() {
     queryKey: ['/api/invoices'],
   });
 
+  const { data: allPlans, isLoading: loadingPlans } = useQuery<any[]>({
+    queryKey: ['/api/plans'],
+  });
+
   const form = useForm<DependentFormData>({
     resolver: zodResolver(dependentFormSchema),
     defaultValues: {
@@ -110,6 +114,36 @@ function PortalClientContent() {
 
   const activeSub = subscriptions?.[0];
   const activePlan = activeSub?.plan;
+
+  // Filtrar planos disponíveis para upgrade (maiores que o plano atual)
+  const currentPlanPrice = activePlan ? parseFloat(activePlan.price.replace(/[^\d,]/g, '').replace(',', '.')) : 0;
+  const upgradeablePlans = allPlans?.filter((plan: any) => {
+    const planPrice = parseFloat(plan.price.replace(/[^\d,]/g, '').replace(',', '.'));
+    return planPrice > currentPlanPrice && plan.active && plan.id !== activePlan?.id;
+  }).sort((a: any, b: any) => {
+    const priceA = parseFloat(a.price.replace(/[^\d,]/g, '').replace(',', '.'));
+    const priceB = parseFloat(b.price.replace(/[^\d,]/g, '').replace(',', '.'));
+    return priceA - priceB;
+  }) || [];
+
+  const handleUpgradePlan = async (planId: number) => {
+    try {
+      const response = await apiRequest("POST", "/api/create-checkout-session", {
+        planId,
+        email: profile?.email,
+      });
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível iniciar upgrade",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="flex min-h-screen bg-slate-50">
@@ -269,54 +303,131 @@ function PortalClientContent() {
               <p className="text-gray-600 mt-1">Detalhes do seu plano contratado</p>
             </div>
 
-            {activePlan ? (
-              <Card className="overflow-hidden">
-                <div className="bg-gradient-to-r from-[#28803d] to-[#1f6030] p-8 text-white">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <Badge className="bg-white/20 text-white mb-4">Plano Ativo</Badge>
-                      <h2 className="text-3xl font-bold mb-2">{activePlan.name}</h2>
-                      <p className="text-green-100 mb-4">{activePlan.description}</p>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-4xl font-bold">{activePlan.price}</span>
-                        <span className="text-green-100">{activePlan.period}</span>
+            {loadingSubs ? (
+              <div className="flex justify-center p-12">
+                <Loader2 className="w-8 h-8 animate-spin text-[#28803d]" />
+              </div>
+            ) : activePlan ? (
+              <>
+                <Card className="overflow-hidden">
+                  <div className="bg-gradient-to-r from-[#28803d] to-[#1f6030] p-8 text-white">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <Badge className="bg-white/20 text-white mb-4">Plano Ativo</Badge>
+                        <h2 className="text-3xl font-bold mb-2">{activePlan.name}</h2>
+                        <p className="text-green-100 mb-4">{activePlan.description}</p>
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-4xl font-bold">{activePlan.price}</span>
+                          <span className="text-green-100">{activePlan.period}</span>
+                        </div>
                       </div>
+                      <Heart className="w-16 h-16 fill-white/20" />
                     </div>
-                    <Heart className="w-16 h-16 fill-white/20" />
                   </div>
-                </div>
-                <CardContent className="p-8">
-                  <div className="grid md:grid-cols-2 gap-8">
-                    <div>
-                      <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-                        <Users className="w-5 h-5 text-[#28803d]" />
-                        Cobertura
-                      </h3>
-                      <div className="bg-slate-50 p-4 rounded-lg">
-                        <p className="text-2xl font-bold text-gray-900">
-                          {activePlan.dependents === 1 ? "1 pessoa" : `Até ${activePlan.dependents} dependentes`}
-                        </p>
-                        <p className="text-sm text-gray-600 mt-1">incluindo o titular</p>
+                  <CardContent className="p-8">
+                    <div className="grid md:grid-cols-2 gap-8">
+                      <div>
+                        <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                          <Users className="w-5 h-5 text-[#28803d]" />
+                          Cobertura
+                        </h3>
+                        <div className="bg-slate-50 p-4 rounded-lg">
+                          <p className="text-2xl font-bold text-gray-900">
+                            {activePlan.dependents === 1 ? "1 pessoa" : `Até ${activePlan.dependents} dependentes`}
+                          </p>
+                          <p className="text-sm text-gray-600 mt-1">incluindo o titular</p>
+                        </div>
+                      </div>
+
+                      <div>
+                        <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                          <CheckCircle className="w-5 h-5 text-[#28803d]" />
+                          Benefícios Inclusos
+                        </h3>
+                        <ul className="space-y-2">
+                          {activePlan.features.map((feature: string, idx: number) => (
+                            <li key={idx} className="flex items-start gap-2 text-sm" data-testid={`feature-${idx}`}>
+                              <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                              <span>{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
                     </div>
 
-                    <div>
-                      <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-                        <CheckCircle className="w-5 h-5 text-[#28803d]" />
-                        Benefícios Inclusos
-                      </h3>
-                      <ul className="space-y-2">
-                        {activePlan.features.map((feature: string, idx: number) => (
-                          <li key={idx} className="flex items-start gap-2 text-sm" data-testid={`feature-${idx}`}>
-                            <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                            <span>{feature}</span>
-                          </li>
-                        ))}
-                      </ul>
+                    {activeSub && (
+                      <div className="mt-6 pt-6 border-t">
+                        <h3 className="font-semibold text-sm text-gray-700 mb-2">Status da Assinatura</h3>
+                        <div className="flex items-center gap-4 text-sm">
+                          <Badge className="bg-green-600">
+                            {activeSub.status === 'active' ? 'Ativo' : activeSub.status}
+                          </Badge>
+                          {activeSub.start_date && (
+                            <span className="text-gray-600">
+                              Desde {format(new Date(activeSub.start_date), "dd/MM/yyyy")}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Upgrade Options */}
+                {upgradeablePlans.length > 0 && (
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Fazer Upgrade do Plano</h2>
+                    <p className="text-gray-600 mb-6">Amplie sua cobertura e benefícios escolhendo um plano superior</p>
+                    <div className="grid md:grid-cols-2 gap-6">
+                      {upgradeablePlans.map((plan: any) => (
+                        <Card key={plan.id} className="relative overflow-hidden hover:shadow-xl transition-shadow border-2 border-transparent hover:border-[#28803d]/20">
+                          {plan.popular && (
+                            <div className="absolute top-4 right-4">
+                              <Badge className="bg-yellow-500">Mais Escolhido</Badge>
+                            </div>
+                          )}
+                          <CardHeader>
+                            <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                            <CardDescription>{plan.description}</CardDescription>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            <div>
+                              <span className="text-3xl font-bold text-[#28803d]">{plan.price}</span>
+                              <span className="text-gray-600 ml-1">{plan.period}</span>
+                            </div>
+                            <div className="bg-slate-50 p-3 rounded-lg">
+                              <Users className="w-4 h-4 text-[#28803d] inline mr-2" />
+                              <span className="text-sm font-medium">
+                                {plan.dependents === 1 ? '1 pessoa' : `Até ${plan.dependents} dependentes`}
+                              </span>
+                            </div>
+                            <div>
+                              <p className="text-sm font-semibold text-gray-700 mb-2">Benefícios inclusos:</p>
+                              <ul className="space-y-1">
+                                {plan.features.slice(0, 4).map((feature: string, idx: number) => (
+                                  <li key={idx} className="flex items-start gap-2 text-sm text-gray-600">
+                                    <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                                    <span>{feature}</span>
+                                  </li>
+                                ))}
+                                {plan.features.length > 4 && (
+                                  <li className="text-sm text-gray-500 ml-6">+ {plan.features.length - 4} benefícios adicionais</li>
+                                )}
+                              </ul>
+                            </div>
+                            <Button 
+                              className="w-full bg-[#28803d] hover:bg-[#1f6030]"
+                              onClick={() => handleUpgradePlan(plan.id)}
+                            >
+                              Fazer Upgrade
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      ))}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                )}
+              </>
             ) : (
               <Card>
                 <CardContent className="flex flex-col items-center justify-center py-16">
