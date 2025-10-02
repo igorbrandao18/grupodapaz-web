@@ -312,7 +312,7 @@ function PortalClientContent() {
     setEditingDependent(dependent);
     form.reset({
       name: dependent.name,
-      cpf: dependent.cpf,
+      cpf: formatCPF(dependent.cpf), // Formatar CPF ao carregar
       relationship: dependent.relationship,
       birthDate: dependent.birth_date ? format(new Date(dependent.birth_date), "yyyy-MM-dd") : "",
       active: dependent.active,
