@@ -784,18 +784,6 @@ function PortalClientContent() {
             ) : dependents && dependents.length > 0 ? (
               <div className="grid md:grid-cols-2 gap-6">
                 {dependents.map((dep: any) => {
-                  const getRelationshipIcon = (rel: string) => {
-                    const lower = rel.toLowerCase();
-                    if (lower.includes('cônjuge') || lower.includes('esposa') || lower.includes('esposo')) return '💑';
-                    if (lower.includes('filho') || lower.includes('filha')) return '👶';
-                    if (lower.includes('pai')) return '👨';
-                    if (lower.includes('mãe') || lower.includes('mae')) return '👩';
-                    if (lower.includes('irmã') || lower.includes('irmao')) return '🤝';
-                    if (lower.includes('avô') || lower.includes('avó')) return '👴';
-                    if (lower.includes('neto') || lower.includes('neta')) return '👦';
-                    return '👤';
-                  };
-                  
                   const calculateAge = (birthDate: string) => {
                     const today = new Date();
                     const birth = new Date(birthDate);
@@ -806,6 +794,12 @@ function PortalClientContent() {
                     }
                     return age;
                   };
+                  
+                  const getInitials = (name: string) => {
+                    const parts = name.trim().split(' ');
+                    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+                    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+                  };
 
                   return (
                     <Card key={dep.id} data-testid={`card-dependent-${dep.id}`} className="hover:shadow-xl transition-all border-l-4 border-l-[#28803d] relative overflow-hidden">
@@ -813,9 +807,12 @@ function PortalClientContent() {
                       <CardContent className="p-6 relative">
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex items-start gap-4 flex-1">
-                            <div className="w-14 h-14 bg-gradient-to-br from-[#28803d] to-[#1f6030] rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
-                              <span className="text-2xl">{getRelationshipIcon(dep.relationship)}</span>
-                            </div>
+                            <Avatar className="w-16 h-16 shadow-lg ring-2 ring-white">
+                              <AvatarImage src={dep.photo_url || undefined} alt={dep.name} />
+                              <AvatarFallback className="bg-gradient-to-br from-[#28803d] to-[#1f6030] text-white text-lg font-bold">
+                                {getInitials(dep.name)}
+                              </AvatarFallback>
+                            </Avatar>
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
                                 <h3 className="font-bold text-lg text-gray-900" data-testid={`text-dependent-name-${dep.id}`}>{dep.name}</h3>
