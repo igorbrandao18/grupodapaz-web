@@ -419,6 +419,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/subscriptions', verifyAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
+      console.log('🔍 Fetching subscriptions for user:', userId, req.user.email);
       
       const { data: subscriptions, error } = await supabaseAdmin
         .from('subscriptions')
@@ -430,13 +431,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .order('created_at', { ascending: false });
       
       if (error) {
-        console.error('Error fetching subscriptions:', error);
+        console.error('❌ Error fetching subscriptions:', error);
         return res.status(500).json({ message: 'Failed to fetch subscriptions' });
+      }
+      
+      console.log('✅ Found subscriptions:', subscriptions?.length || 0);
+      if (subscriptions && subscriptions.length > 0) {
+        console.log('📋 First subscription:', JSON.stringify(subscriptions[0], null, 2));
       }
       
       res.json(subscriptions || []);
     } catch (error) {
-      console.error('Error fetching subscriptions:', error);
+      console.error('❌ Error fetching subscriptions:', error);
       res.status(500).json({ message: 'Server error' });
     }
   });
