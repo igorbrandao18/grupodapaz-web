@@ -7,7 +7,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { LogOut, User, CreditCard, Users, FileText, Plus, Trash2, CheckCircle, Heart, Loader2, LayoutDashboard, HelpCircle, Settings, ChevronLeft, Calendar, Check } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { LogOut, User, CreditCard, Users, FileText, Plus, Trash2, CheckCircle, Heart, Loader2, LayoutDashboard, HelpCircle, Settings, ChevronLeft, Calendar, Check, Upload, Camera } from "lucide-react";
 import ProtectedRoute from "@/components/protected-route";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { format } from "date-fns";
 import { useState, useEffect } from "react";
+import { uploadDependentPhoto } from "@/lib/supabaseStorage";
 
 const dependentFormSchema = insertDependentSchema.extend({
   name: z.string().min(1, "Nome é obrigatório").regex(/^[a-zA-ZÀ-ÿ\s]+$/, "Nome não pode conter números"),
@@ -87,6 +89,8 @@ function PortalClientContent() {
   const [activeMenu, setActiveMenu] = useState("dashboard");
   const [addDependentOpen, setAddDependentOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   const { data: subscriptions, isLoading: loadingSubs } = useQuery<any[]>({
     queryKey: ['/api/subscriptions'],
@@ -143,11 +147,27 @@ function PortalClientContent() {
 
   const createDependentMutation = useMutation({
     mutationFn: async (data: DependentFormData) => {
+      let photoUrl = null;
+      
+      if (photoFile) {
+        try {
+          photoUrl = await uploadDependentPhoto(photoFile);
+        } catch (error) {
+          console.error('Erro ao fazer upload da foto:', error);
+          toast({
+            title: "Aviso",
+            description: "Não foi possível fazer upload da foto, mas o dependente será salvo sem foto.",
+            variant: "destructive",
+          });
+        }
+      }
+      
       const payload = {
         name: data.name,
         cpf: data.cpf,
         relationship: data.relationship,
         birth_date: data.birthDate ? new Date(data.birthDate).toISOString() : null,
+        photo_url: photoUrl,
         active: data.active,
       };
       return apiRequest("POST", "/api/dependents", payload);
@@ -159,6 +179,8 @@ function PortalClientContent() {
         description: "O dependente foi cadastrado com sucesso.",
       });
       form.reset();
+      setPhotoFile(null);
+      setPhotoPreview(null);
       setAddDependentOpen(false);
     },
     onError: (error: any) => {
@@ -597,6 +619,47 @@ function PortalClientContent() {
                           <FormMessage />
                         </FormItem>
                       )} />
+                      
+                      <div className="space-y-2">
+                        <FormLabel>Foto do Dependente</FormLabel>
+                        <div className="flex items-center gap-4">
+                          <Avatar className="w-20 h-20">
+                            <AvatarImage src={photoPreview || undefined} />
+                            <AvatarFallback className="bg-gradient-to-br from-[#28803d] to-[#1f6030] text-white">
+                              <Camera className="w-8 h-8" />
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <Input 
+                              type="file" 
+                              accept="image/png,image/jpeg,image/jpg,image/webp"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  if (file.size > 2 * 1024 * 1024) {
+                                    toast({
+                                      title: "Arquivo muito grande",
+                                      description: "A foto deve ter no máximo 2MB",
+                                      variant: "destructive",
+                                    });
+                                    return;
+                                  }
+                                  setPhotoFile(file);
+                                  const reader = new FileReader();
+                                  reader.onloadend = () => {
+                                    setPhotoPreview(reader.result as string);
+                                  };
+                                  reader.readAsDataURL(file);
+                                }
+                              }}
+                              className="cursor-pointer"
+                              data-testid="input-dependent-photo"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">PNG, JPEG ou WebP - Máx. 2MB</p>
+                          </div>
+                        </div>
+                      </div>
+
                       <FormField control={form.control} name="cpf" render={({ field }) => (
                         <FormItem>
                           <FormLabel>CPF</FormLabel>
