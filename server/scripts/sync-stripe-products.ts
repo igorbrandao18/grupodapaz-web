@@ -72,21 +72,23 @@ async function syncStripeProducts() {
       }
 
       // 5. Atualizar plano no Supabase com IDs do Stripe
-      if (!plan.stripe_product_id || !plan.stripe_price_id) {
-        console.log('   🔄 Atualizando Supabase...');
-        const { error: updateError } = await supabaseAdmin
-          .from('plans')
-          .update({
-            stripe_product_id: productId,
-            stripe_price_id: priceId,
-          })
-          .eq('id', plan.id);
+      console.log('   🔄 Atualizando Supabase...');
+      console.log(`   ID do plano: ${plan.id}`);
+      const { data: updateResult, error: updateError } = await supabaseAdmin
+        .from('plans')
+        .update({
+          stripe_product_id: productId,
+          stripe_price_id: priceId,
+        })
+        .eq('id', plan.id)
+        .select();
 
-        if (updateError) {
-          console.log(`   ❌ Erro ao atualizar: ${updateError.message}`);
-        } else {
-          console.log('   ✅ Supabase atualizado');
-        }
+      if (updateError) {
+        console.log(`   ❌ Erro ao atualizar: ${updateError.message}`);
+        console.log(`   Detalhes:`, updateError);
+      } else {
+        console.log('   ✅ Supabase atualizado');
+        console.log(`   Dados salvos:`, updateResult);
       }
     }
 

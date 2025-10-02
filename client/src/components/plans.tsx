@@ -19,7 +19,7 @@ export default function Plans() {
   const { toast } = useToast();
 
   const checkoutMutation = useMutation({
-    mutationFn: async (data: { planId: number }) => {
+    mutationFn: async (data: { planId: number; email: string }) => {
       const response = await apiRequest("POST", "/api/create-checkout-session", data);
       return response.json();
     },
@@ -63,7 +63,7 @@ export default function Plans() {
       return;
     }
 
-    checkoutMutation.mutate({ planId: selectedPlan.id });
+    checkoutMutation.mutate({ planId: selectedPlan.id, email });
   };
 
   return (

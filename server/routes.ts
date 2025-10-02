@@ -360,6 +360,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { planId, email } = req.body;
       
+      console.log('📝 Checkout request:', { planId, email });
+      
       if (!email) {
         return res.status(400).json({ message: 'Email is required' });
       }
@@ -371,12 +373,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .eq('id', planId)
         .single();
       
+      console.log('📦 Plan query result:', { plan, error: planError });
+      
       if (planError || !plan) {
-        return res.status(404).json({ message: 'Plan not found' });
+        console.error('❌ Plan not found:', planError);
+        return res.status(404).json({ message: 'Plan not found', error: planError?.message });
       }
       
-      if (!plan.stripePriceId) {
-        return res.status(400).json({ message: 'Plan not configured for Stripe' });
+      if (!plan.stripe_price_id) {
+        console.error('❌ Plan missing Stripe price ID:', plan);
+        return res.status(400).json({ message: 'Plan not configured for Stripe', planName: plan.name });
       }
       
       // Create checkout session with customer email
@@ -387,7 +393,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         payment_method_types: ['card'],
         line_items: [
           {
-            price: plan.stripePriceId,
+            price: plan.stripe_price_id,
             quantity: 1,
           },
         ],
@@ -399,9 +405,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
       
+      console.log('✅ Checkout session created:', session.id);
       res.json({ url: session.url });
     } catch (error: any) {
-      console.error('Error creating checkout session:', error);
+      console.error('❌ Error creating checkout session:', error);
       res.status(500).json({ message: error.message });
     }
   });
