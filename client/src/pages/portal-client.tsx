@@ -33,7 +33,7 @@ const menuItems: MenuItem[] = [
   { id: "dashboard", label: "Visão Geral", icon: <LayoutDashboard className="w-5 h-5" /> },
   { id: "plan", label: "Meu Plano", icon: <Heart className="w-5 h-5" /> },
   { id: "dependents", label: "Dependentes", icon: <Users className="w-5 h-5" /> },
-  { id: "invoices", label: "Faturas", icon: <FileText className="w-5 h-5" /> },
+  { id: "invoices", label: "Pagamentos", icon: <CreditCard className="w-5 h-5" /> },
   { id: "profile", label: "Meu Perfil", icon: <User className="w-5 h-5" /> },
 ];
 
@@ -42,6 +42,8 @@ function PortalClientContent() {
   const { toast } = useToast();
   const [activeMenu, setActiveMenu] = useState("dashboard");
   const [addDependentOpen, setAddDependentOpen] = useState(false);
+  const [pixDialogOpen, setPixDialogOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
 
   const { data: subscriptions, isLoading: loadingSubs } = useQuery<any[]>({
     queryKey: ['/api/subscriptions'],
@@ -124,6 +126,22 @@ function PortalClientContent() {
       toast({
         title: "Dependente removido",
         description: "O dependente foi removido com sucesso.",
+      });
+    },
+  });
+
+  const generatePixMutation = useMutation({
+    mutationFn: (invoiceId: number) => apiRequest("POST", `/api/invoices/${invoiceId}/generate-copy`, {}),
+    onSuccess: async (response) => {
+      const data = await response.json();
+      setSelectedInvoice((prev: any) => ({ ...prev, ...data }));
+      setPixDialogOpen(true);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível gerar o PIX.",
+        variant: "destructive",
       });
     },
   });
@@ -577,12 +595,12 @@ function PortalClientContent() {
           </div>
         )}
 
-        {/* Faturas */}
+        {/* Pagamentos / Faturas */}
         {activeMenu === "invoices" && (
           <div className="space-y-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Faturas</h1>
-              <p className="text-gray-600 mt-1">Histórico de pagamentos e 2ª via</p>
+              <h1 className="text-3xl font-bold text-gray-900">Histórico de Pagamentos</h1>
+              <p className="text-gray-600 mt-1">Consulte suas faturas e gere 2ª via com PIX ou Boleto</p>
             </div>
 
             {loadingInvoices ? (
@@ -595,40 +613,73 @@ function PortalClientContent() {
                   <Card key={invoice.id} data-testid={`card-invoice-${invoice.id}`} className="hover:shadow-lg transition-shadow">
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <p className="text-3xl font-bold text-gray-900" data-testid={`text-invoice-amount-${invoice.id}`}>
-                            R$ {parseFloat(invoice.amount).toFixed(2)}
-                          </p>
-                          <p className="text-sm text-gray-600 mt-1">
-                            Vencimento: {format(new Date(invoice.due_date), "dd/MM/yyyy")}
-                          </p>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <CreditCard className="w-8 h-8 text-[#28803d]" />
+                            <div>
+                              <p className="text-2xl font-bold text-gray-900" data-testid={`text-invoice-amount-${invoice.id}`}>
+                                R$ {parseFloat(invoice.amount).toFixed(2)}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                Vencimento: {format(new Date(invoice.due_date), "dd/MM/yyyy")}
+                              </p>
+                            </div>
+                          </div>
+                          {invoice.created_at && (
+                            <p className="text-xs text-gray-500 ml-11">
+                              Processado em: {format(new Date(invoice.created_at), "dd/MM/yyyy 'às' HH:mm")}
+                            </p>
+                          )}
                         </div>
                         <Badge 
                           variant={invoice.status === 'paid' ? 'default' : 'secondary'} 
-                          className={invoice.status === 'paid' ? 'bg-green-600' : 'bg-yellow-600'} 
+                          className={invoice.status === 'paid' ? 'bg-green-600 text-white' : 'bg-yellow-600 text-white'} 
                           data-testid={`badge-invoice-status-${invoice.id}`}
                         >
-                          {invoice.status === 'paid' ? 'Pago' : 'Pendente'}
+                          {invoice.status === 'paid' ? '✓ Pago' : '⏳ Pendente'}
                         </Badge>
                       </div>
-                      <div className="grid md:grid-cols-2 gap-3">
+                      
+                      <div className="grid md:grid-cols-3 gap-3 mt-4">
                         {invoice.hosted_invoice_url && (
                           <Button 
                             variant="outline" 
                             onClick={() => window.open(invoice.hosted_invoice_url, '_blank')} 
                             data-testid={`button-view-invoice-${invoice.id}`}
+                            className="w-full"
                           >
                             <FileText className="w-4 h-4 mr-2" />
-                            Ver Fatura Online
+                            Ver Fatura
                           </Button>
                         )}
                         <Button 
                           variant="outline"
-                          className="border-[#28803d] text-[#28803d] hover:bg-[#28803d] hover:text-white"
-                          data-testid={`button-generate-copy-${invoice.id}`}
+                          className="border-green-600 text-green-600 hover:bg-green-600 hover:text-white w-full"
+                          onClick={() => {
+                            setSelectedInvoice(invoice);
+                            generatePixMutation.mutate(invoice.id);
+                          }}
+                          disabled={generatePixMutation.isPending}
+                          data-testid={`button-generate-pix-${invoice.id}`}
+                        >
+                          {generatePixMutation.isPending ? (
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          ) : (
+                            <CreditCard className="w-4 h-4 mr-2" />
+                          )}
+                          PIX QR Code
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white w-full"
+                          onClick={() => {
+                            setSelectedInvoice(invoice);
+                            generatePixMutation.mutate(invoice.id);
+                          }}
+                          data-testid={`button-generate-boleto-${invoice.id}`}
                         >
                           <FileText className="w-4 h-4 mr-2" />
-                          Gerar 2ª Via (PIX/Boleto)
+                          Boleto
                         </Button>
                       </div>
                     </CardContent>
@@ -638,14 +689,129 @@ function PortalClientContent() {
             ) : (
               <Card>
                 <CardContent className="flex flex-col items-center justify-center py-16">
-                  <FileText className="w-16 h-16 text-gray-300 mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Nenhuma fatura encontrada</h3>
-                  <p className="text-gray-600">Suas faturas aparecerão aqui após o primeiro pagamento</p>
+                  <CreditCard className="w-16 h-16 text-gray-300 mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Nenhum pagamento encontrado</h3>
+                  <p className="text-gray-600 text-center">
+                    Seus pagamentos aparecerão aqui após a primeira cobrança.<br />
+                    O histórico é sincronizado automaticamente.
+                  </p>
                 </CardContent>
               </Card>
             )}
           </div>
         )}
+
+        {/* PIX Dialog */}
+        <Dialog open={pixDialogOpen} onOpenChange={setPixDialogOpen}>
+          <DialogContent className="max-w-md" data-testid="dialog-pix">
+            <DialogHeader>
+              <DialogTitle>Pagamento via PIX ou Boleto</DialogTitle>
+              <DialogDescription>
+                Escolha a forma de pagamento para gerar a 2ª via
+              </DialogDescription>
+            </DialogHeader>
+            
+            {selectedInvoice && (
+              <div className="space-y-6">
+                {/* Valor */}
+                <div className="bg-slate-50 p-4 rounded-lg text-center">
+                  <p className="text-sm text-gray-600 mb-1">Valor da Fatura</p>
+                  <p className="text-3xl font-bold text-[#28803d]">
+                    R$ {parseFloat(selectedInvoice.amount).toFixed(2)}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Vencimento: {format(new Date(selectedInvoice.due_date), "dd/MM/yyyy")}
+                  </p>
+                </div>
+
+                {/* PIX QR Code */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                    <h3 className="font-semibold text-gray-900">PIX - Pagamento Instantâneo</h3>
+                  </div>
+                  
+                  {selectedInvoice.pixCode ? (
+                    <>
+                      <div className="bg-white border-2 border-green-600 rounded-lg p-4 flex flex-col items-center">
+                        <div className="bg-white p-3 rounded-lg mb-3">
+                          {/* QR Code placeholder - em produção, usar biblioteca de QR Code */}
+                          <div className="w-48 h-48 bg-gray-100 flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300">
+                            <div className="text-center">
+                              <CreditCard className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                              <p className="text-xs text-gray-500">QR Code PIX</p>
+                            </div>
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-600 text-center mb-3">
+                          Escaneie o QR Code com o app do seu banco
+                        </p>
+                      </div>
+                      
+                      <div className="bg-slate-50 p-3 rounded-lg">
+                        <p className="text-xs font-semibold text-gray-700 mb-2">Código PIX Copia e Cola:</p>
+                        <div className="bg-white p-2 rounded border border-gray-200 font-mono text-xs break-all">
+                          {selectedInvoice.pixCode}
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full mt-2"
+                          onClick={() => {
+                            navigator.clipboard.writeText(selectedInvoice.pixCode);
+                            toast({
+                              title: "Copiado!",
+                              description: "Código PIX copiado para área de transferência",
+                            });
+                          }}
+                        >
+                          Copiar Código PIX
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
+                      <p className="text-sm text-yellow-800">PIX em processamento...</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Boleto */}
+                <div className="space-y-3 pt-4 border-t">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                    <h3 className="font-semibold text-gray-900">Boleto Bancário</h3>
+                  </div>
+                  
+                  {selectedInvoice.boletoUrl ? (
+                    <div className="space-y-2">
+                      {selectedInvoice.boletoBarcode && (
+                        <div className="bg-slate-50 p-3 rounded-lg">
+                          <p className="text-xs font-semibold text-gray-700 mb-2">Código de Barras:</p>
+                          <div className="bg-white p-2 rounded border border-gray-200 font-mono text-xs">
+                            {selectedInvoice.boletoBarcode}
+                          </div>
+                        </div>
+                      )}
+                      <Button 
+                        variant="outline"
+                        className="w-full border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white"
+                        onClick={() => window.open(selectedInvoice.boletoUrl, '_blank')}
+                      >
+                        <FileText className="w-4 h-4 mr-2" />
+                        Baixar Boleto PDF
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
+                      <p className="text-sm text-yellow-800">Boleto em processamento...</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
 
         {/* Meu Perfil */}
         {activeMenu === "profile" && (
