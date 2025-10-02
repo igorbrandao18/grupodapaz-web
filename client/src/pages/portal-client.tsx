@@ -22,7 +22,7 @@ import { uploadDependentPhoto, deleteDependentPhoto } from "@/lib/supabaseStorag
 
 const dependentFormSchema = insertDependentSchema.extend({
   name: z.string().min(1, "Nome é obrigatório").regex(/^[a-zA-ZÀ-ÿ\s]+$/, "Nome não pode conter números"),
-  cpf: z.string().min(14, "CPF incompleto").max(14),
+  cpf: z.string().min(11, "CPF incompleto"),
   birthDate: z.string().optional(),
 });
 
@@ -213,7 +213,7 @@ function PortalClientContent() {
       
       const payload = {
         name: data.name,
-        cpf: data.cpf,
+        cpf: data.cpf.replace(/\D/g, ''), // Remover máscara antes de enviar
         relationship: data.relationship,
         birth_date: data.birthDate ? new Date(data.birthDate).toISOString() : null,
         photo_url: photoUrl,
@@ -1025,19 +1025,19 @@ function PortalClientContent() {
                           {/* Ações */}
                           <div className="flex md:flex-col gap-2 items-start justify-end">
                             <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="text-[#28803d] hover:text-[#1f6030] hover:bg-green-50"
+                              size="icon" 
+                              variant="outline"
+                              className="bg-green-50 border-green-200 text-[#28803d] hover:bg-green-100 hover:border-green-300"
                               onClick={() => handleEditDependent(dep)}
                               data-testid={`button-edit-dependent-${dep.id}`}
+                              title="Editar dependente"
                             >
-                              <Pencil className="w-4 h-4 mr-2" />
-                              Editar
+                              <Pencil className="w-4 h-4" />
                             </Button>
                             <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              size="icon"
+                              variant="outline"
+                              className="bg-red-50 border-red-200 text-red-600 hover:bg-red-100 hover:border-red-300"
                               onClick={() => {
                                 if (confirm(`Tem certeza que deseja remover ${dep.name}?`)) {
                                   deleteDependentMutation.mutate(dep);
@@ -1045,9 +1045,9 @@ function PortalClientContent() {
                               }} 
                               disabled={deleteDependentMutation.isPending} 
                               data-testid={`button-delete-dependent-${dep.id}`}
+                              title="Remover dependente"
                             >
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Remover
+                              <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
                         </div>
