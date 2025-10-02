@@ -81,9 +81,9 @@ function PortalClientContent() {
     queryKey: ['/api/plans'],
   });
 
-  // Pegar assinatura e plano atual
+  // Pegar assinatura e plano atual (plano já vem na subscription via JOIN)
   const currentSubscription = subscriptions?.[0];
-  const currentPlan = allPlans?.find((p: any) => p.id === currentSubscription?.plan_id);
+  const currentPlan = currentSubscription?.plan;
 
   const form = useForm<DependentFormData>({
     resolver: zodResolver(dependentFormSchema),
