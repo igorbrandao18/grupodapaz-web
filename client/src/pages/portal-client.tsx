@@ -130,122 +130,237 @@ function PortalClientContent() {
       </nav>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="w-5 h-5" />
-                Informações Pessoais
-              </CardTitle>
-              <CardDescription>Seus dados cadastrais</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Nome Completo</p>
-                <p className="font-medium">{profile?.fullName || "Não informado"}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Email</p>
-                  <p className="font-medium">{profile?.email}</p>
-                </div>
-              </div>
-              {profile?.phone && (
-                <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Telefone</p>
-                    <p className="font-medium">{profile.phone}</p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        <Tabs defaultValue="plan" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3" data-testid="tabs-navigation">
+            <TabsTrigger value="plan" data-testid="tab-plan">
+              <Heart className="w-4 h-4 mr-2" />
+              Meu Plano
+            </TabsTrigger>
+            <TabsTrigger value="dependents" data-testid="tab-dependents">
+              <Users className="w-4 h-4 mr-2" />
+              Dependentes
+            </TabsTrigger>
+            <TabsTrigger value="invoices" data-testid="tab-invoices">
+              <FileText className="w-4 h-4 mr-2" />
+              Faturas
+            </TabsTrigger>
+          </TabsList>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CreditCard className="w-5 h-5" />
-                Meu Plano
-              </CardTitle>
-              <CardDescription>Plano de proteção contratado</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {activePlan ? (
-                <div className="space-y-4">
+          <TabsContent value="plan" data-testid="tab-content-plan">
+            <div className="grid md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="w-5 h-5" />
+                    Informações Pessoais
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <div>
-                    <h3 className="text-xl font-bold text-primary">{activePlan.name}</h3>
-                    <p className="text-2xl font-bold mt-2">
-                      {activePlan.price}
-                      <span className="text-sm text-muted-foreground ml-1">{activePlan.period}</span>
-                    </p>
+                    <p className="text-sm text-muted-foreground">Nome</p>
+                    <p className="font-medium">{profile?.fullName || "Não informado"}</p>
                   </div>
-                  
-                  {activePlan.description && (
-                    <p className="text-sm text-muted-foreground">{activePlan.description}</p>
-                  )}
-
-                  {activePlan.dependents && (
-                    <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-lg">
-                      <Users className="w-4 h-4 text-primary" />
-                      <span className="text-sm">
-                        {activePlan.dependents === 1 
-                          ? '1 pessoa coberta' 
-                          : `Até ${activePlan.dependents} dependentes`}
-                      </span>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Email</p>
+                    <p className="font-medium">{profile?.email}</p>
+                  </div>
+                  {profile?.phone && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Telefone</p>
+                      <p className="font-medium">{profile.phone}</p>
                     </div>
                   )}
+                </CardContent>
+              </Card>
 
-                  <div>
-                    <p className="text-sm font-medium mb-2">Benefícios inclusos:</p>
-                    <ul className="space-y-1">
-                      {activePlan.features.map((feature: string, index: number) => (
-                        <li key={index} className="text-sm text-muted-foreground flex items-start">
-                          <span className="text-primary mr-2">✓</span>
-                          {feature}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground mb-4">Você ainda não possui um plano contratado</p>
-                  <Button onClick={() => (window.location.href = "/#planos")}>
-                    Ver Planos Disponíveis
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Precisa de Ajuda?</CardTitle>
-            <CardDescription>Entre em contato conosco</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="text-center p-4 bg-muted rounded-lg">
-                <Phone className="w-6 h-6 mx-auto mb-2 text-primary" />
-                <p className="font-medium">(85) 3456-7890</p>
-                <p className="text-sm text-muted-foreground">Atendimento 24h</p>
-              </div>
-              <div className="text-center p-4 bg-muted rounded-lg">
-                <Mail className="w-6 h-6 mx-auto mb-2 text-primary" />
-                <p className="font-medium">contato@grupodapaz.com</p>
-                <p className="text-sm text-muted-foreground">Email</p>
-              </div>
-              <div className="text-center p-4 bg-muted rounded-lg">
-                <User className="w-6 h-6 mx-auto mb-2 text-primary" />
-                <p className="font-medium">Atendimento Presencial</p>
-                <p className="text-sm text-muted-foreground">Seg-Sex: 8h-18h</p>
-              </div>
+              <Card data-testid="card-active-plan">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <CreditCard className="w-5 h-5" />
+                    Plano Ativo
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {activePlan ? (
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="text-xl font-bold text-primary">{activePlan.name}</h3>
+                        <p className="text-2xl font-bold mt-2" data-testid="text-plan-price">
+                          {activePlan.price}<span className="text-sm text-muted-foreground ml-1">{activePlan.period}</span>
+                        </p>
+                      </div>
+                      {activePlan.description && (
+                        <p className="text-sm text-muted-foreground">{activePlan.description}</p>
+                      )}
+                      <div className="bg-muted p-3 rounded-lg">
+                        <Users className="w-4 h-4 text-primary inline mr-2" />
+                        <span className="text-sm" data-testid="text-plan-dependents">
+                          {activePlan.dependents === 1 ? '1 pessoa' : `Até ${activePlan.dependents} dependentes`}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium mb-2">Benefícios:</p>
+                        <ul className="space-y-1">
+                          {activePlan.features.map((feature: string, idx: number) => (
+                            <li key={idx} className="flex items-center gap-2 text-sm" data-testid={`feature-${idx}`}>
+                              <CheckCircle className="w-4 h-4 text-green-600" />
+                              {feature}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8" data-testid="card-no-plan">
+                      <p className="text-muted-foreground mb-4">Você ainda não possui um plano contratado</p>
+                      <Button onClick={() => (window.location.href = "/")} data-testid="button-view-plans">
+                        Ver Planos Disponíveis
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
-          </CardContent>
-        </Card>
+          </TabsContent>
+
+          <TabsContent value="dependents" data-testid="tab-content-dependents">
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <CardTitle>Meus Dependentes</CardTitle>
+                  <Dialog open={addDependentOpen} onOpenChange={setAddDependentOpen}>
+                    <DialogTrigger asChild>
+                      <Button data-testid="button-add-dependent">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Adicionar
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent data-testid="dialog-add-dependent">
+                      <DialogHeader>
+                        <DialogTitle>Adicionar Dependente</DialogTitle>
+                        <DialogDescription>Preencha os dados do dependente</DialogDescription>
+                      </DialogHeader>
+                      <Form {...form}>
+                        <form onSubmit={form.handleSubmit((data) => createDependentMutation.mutate(data))} className="space-y-4">
+                          <FormField control={form.control} name="name" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Nome Completo</FormLabel>
+                              <FormControl><Input {...field} data-testid="input-dependent-name" /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                          <FormField control={form.control} name="cpf" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>CPF</FormLabel>
+                              <FormControl><Input {...field} data-testid="input-dependent-cpf" /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                          <FormField control={form.control} name="relationship" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Parentesco</FormLabel>
+                              <FormControl><Input {...field} placeholder="Ex: Cônjuge, Filho(a)" data-testid="input-dependent-relationship" /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                          <FormField control={form.control} name="birthDate" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Data de Nascimento</FormLabel>
+                              <FormControl><Input type="date" {...field} data-testid="input-dependent-birthdate" /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                          <Button type="submit" className="w-full" disabled={createDependentMutation.isPending} data-testid="button-submit-dependent">
+                            {createDependentMutation.isPending ? "Adicionando..." : "Adicionar"}
+                          </Button>
+                        </form>
+                      </Form>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {loadingDeps ? (
+                  <div className="flex justify-center p-12">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                  </div>
+                ) : dependents && dependents.length > 0 ? (
+                  <div className="space-y-4">
+                    {dependents.map((dep: any) => (
+                      <Card key={dep.id} data-testid={`card-dependent-${dep.id}`}>
+                        <CardContent className="flex items-center justify-between p-4">
+                          <div>
+                            <h3 className="font-semibold" data-testid={`text-dependent-name-${dep.id}`}>{dep.name}</h3>
+                            <p className="text-sm text-muted-foreground">{dep.relationship} • CPF: {dep.cpf}</p>
+                            {dep.birthDate && <p className="text-sm text-muted-foreground">Nascimento: {format(new Date(dep.birthDate), "dd/MM/yyyy")}</p>}
+                          </div>
+                          <Button variant="destructive" size="sm" onClick={() => deleteDependentMutation.mutate(dep.id)} disabled={deleteDependentMutation.isPending} data-testid={`button-delete-dependent-${dep.id}`}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center p-12" data-testid="card-no-dependents">
+                    <Users className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                    <p className="text-muted-foreground">Nenhum dependente cadastrado</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="invoices" data-testid="tab-content-invoices">
+            <Card>
+              <CardHeader>
+                <CardTitle>Minhas Faturas</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loadingInvoices ? (
+                  <div className="flex justify-center p-12">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                  </div>
+                ) : invoices && invoices.length > 0 ? (
+                  <div className="space-y-4">
+                    {invoices.map((invoice: any) => (
+                      <Card key={invoice.id} data-testid={`card-invoice-${invoice.id}`}>
+                        <CardContent className="p-6">
+                          <div className="flex justify-between items-start mb-4">
+                            <div>
+                              <p className="text-2xl font-bold" data-testid={`text-invoice-amount-${invoice.id}`}>
+                                R$ {parseFloat(invoice.amount).toFixed(2)}
+                              </p>
+                              <p className="text-sm text-muted-foreground">Vencimento: {format(new Date(invoice.dueDate), "dd/MM/yyyy")}</p>
+                            </div>
+                            <Badge variant={invoice.status === 'paid' ? 'default' : 'secondary'} className={invoice.status === 'paid' ? 'bg-green-600' : ''} data-testid={`badge-invoice-status-${invoice.id}`}>
+                              {invoice.status === 'paid' ? 'Pago' : 'Pendente'}
+                            </Badge>
+                          </div>
+                          <div className="space-y-2">
+                            {invoice.hostedInvoiceUrl && (
+                              <Button variant="outline" className="w-full" onClick={() => window.open(invoice.hostedInvoiceUrl, '_blank')} data-testid={`button-view-invoice-${invoice.id}`}>
+                                <FileText className="w-4 h-4 mr-2" />Ver Fatura
+                              </Button>
+                            )}
+                            <Button variant="outline" className="w-full" onClick={() => generateCopyMutation.mutate(invoice.id)} disabled={generateCopyMutation.isPending} data-testid={`button-generate-copy-${invoice.id}`}>
+                              <Download className="w-4 h-4 mr-2" />Gerar 2ª Via (PIX/Boleto)
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center p-12" data-testid="card-no-invoices">
+                    <FileText className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                    <p className="text-muted-foreground">Nenhuma fatura encontrada</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
