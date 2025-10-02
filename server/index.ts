@@ -10,6 +10,9 @@ app.use((req, res, next) => {
   next();
 });
 
+// Stripe webhook needs raw body, so parse it before express.json()
+app.use('/api/webhooks/stripe', express.raw({ type: 'application/json' }));
+
 declare module 'http' {
   interface IncomingMessage {
     rawBody: unknown
