@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Loader2, Heart, Shield, Users, CheckCircle } from "lucide-react";
 
 export default function Login() {
   const [, setLocation] = useLocation();
-  const { signIn } = useAuth();
+  const { signIn, profile, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
@@ -18,17 +18,38 @@ export default function Login() {
     password: "",
   });
 
+  // Redirecionar automaticamente se já estiver logado
+  useEffect(() => {
+    if (!authLoading && profile) {
+      if (profile.role === 'admin') {
+        setLocation("/admin");
+      } else {
+        setLocation("/portal");
+      }
+    }
+  }, [profile, authLoading, setLocation]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
       await signIn(formData.email, formData.password);
-      toast({
-        title: "Bem-vindo de volta!",
-        description: "Acesso ao portal liberado",
-      });
-      setLocation("/portal");
+      
+      // Aguardar um pouco para garantir que o contexto de auth seja atualizado
+      setTimeout(() => {
+        toast({
+          title: "Bem-vindo de volta!",
+          description: "Acesso ao portal liberado",
+        });
+        
+        // Redirecionar baseado no role do usuário
+        if (profile?.role === 'admin') {
+          setLocation("/admin");
+        } else {
+          setLocation("/portal");
+        }
+      }, 500);
     } catch (error: any) {
       toast({
         title: "Erro ao fazer login",
