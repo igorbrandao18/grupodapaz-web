@@ -179,6 +179,9 @@ function PortalClientContent() {
 
   const createDependentMutation = useMutation({
     mutationFn: async (data: DependentFormData) => {
+      console.log('Submit triggered with data:', data);
+      console.log('Editing dependent?', editingDependent);
+      
       let photoUrl = editingDependent?.photo_url || null;
       const oldPhotoUrl = editingDependent?.photo_url || null;
       
@@ -1025,18 +1028,18 @@ function PortalClientContent() {
                           {/* Ações */}
                           <div className="flex md:flex-col gap-2 items-start justify-end">
                             <Button 
-                              size="icon" 
                               variant="outline"
+                              size="sm"
                               className="bg-green-50 border-green-200 text-[#28803d] hover:bg-green-100 hover:border-green-300"
                               onClick={() => handleEditDependent(dep)}
                               data-testid={`button-edit-dependent-${dep.id}`}
-                              title="Editar dependente"
                             >
-                              <Pencil className="w-4 h-4" />
+                              <Pencil className="w-4 h-4 mr-2" />
+                              Editar
                             </Button>
                             <Button 
-                              size="icon"
                               variant="outline"
+                              size="sm"
                               className="bg-red-50 border-red-200 text-red-600 hover:bg-red-100 hover:border-red-300"
                               onClick={() => {
                                 if (confirm(`Tem certeza que deseja remover ${dep.name}?`)) {
@@ -1045,9 +1048,9 @@ function PortalClientContent() {
                               }} 
                               disabled={deleteDependentMutation.isPending} 
                               data-testid={`button-delete-dependent-${dep.id}`}
-                              title="Remover dependente"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Remover
                             </Button>
                           </div>
                         </div>
