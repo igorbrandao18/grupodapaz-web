@@ -264,3 +264,4 @@ Para dúvidas ou problemas:
 **Desenvolvido com ❤️ para o Grupo da Paz**
 # Teste SSH funcionando
 # Deploy test - SSH e secrets configurados
+# SSH configurado - teste de deploy
