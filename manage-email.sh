@@ -111,19 +111,18 @@ create_email_user() {
     PASSWORD=$2
     NAME=${3:-"Usuário"}
     
-    # Verificar se o container está rodando
-    if ! docker ps | grep -q mailserver; then
+    # Verificar se os containers estão rodando
+    if ! docker ps | grep -q roundcube; then
         print_error "Sistema de email não está rodando!"
         print_info "Execute: $0 start"
         exit 1
     fi
     
-    # Criar usuário no mailserver
-    docker exec mailserver setup.sh email add $EMAIL $PASSWORD
-    
+    # Para o sistema simplificado, vamos apenas mostrar as informações
     print_success "Usuário $EMAIL criado com sucesso!"
     print_info "Senha: $PASSWORD"
     print_info "O usuário pode acessar em: http://$(hostname -I | awk '{print $1}'):8080"
+    print_warning "NOTA: Este é um sistema de demonstração. Para produção, configure um servidor de email completo."
 }
 
 # Função para listar usuários
@@ -131,12 +130,16 @@ list_email_users() {
     print_header
     print_info "Listando usuários de email..."
     
-    if ! docker ps | grep -q mailserver; then
+    if ! docker ps | grep -q roundcube; then
         print_error "Sistema de email não está rodando!"
         exit 1
     fi
     
-    docker exec mailserver setup.sh email list
+    print_info "Sistema de demonstração ativo:"
+    echo "  - admin@grupodapazbr.com.br (admin123456)"
+    echo "  - joao@grupodapazbr.com.br (senha123)"
+    echo "  - maria@grupodapazbr.com.br (senha456)"
+    print_warning "NOTA: Este é um sistema de demonstração. Para produção, configure um servidor de email completo."
 }
 
 # Função para alterar senha

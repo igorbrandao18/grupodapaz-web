@@ -40,6 +40,33 @@ services:
     networks:
       - app-network
 
+  # Interface web Roundcube para funcionários
+  roundcube:
+    image: roundcube/roundcubemail:latest
+    ports:
+      - "8080:80"
+    environment:
+      - ROUNDCUBEMAIL_DEFAULT_HOST=mailpit
+      - ROUNDCUBEMAIL_DEFAULT_PORT=1025
+      - ROUNDCUBEMAIL_SMTP_SERVER=mailpit
+      - ROUNDCUBEMAIL_SMTP_PORT=1025
+    volumes:
+      - roundcube_data:/var/www/html
+    depends_on:
+      - mailpit
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  # Interface de administração
+  adminer:
+    image: adminer:latest
+    ports:
+      - "8081:8080"
+    restart: unless-stopped
+    networks:
+      - app-network
+
   # Nginx como proxy reverso para domínios
   nginx:
     image: nginx:alpine
@@ -54,6 +81,9 @@ services:
     restart: unless-stopped
     networks:
       - app-network
+
+volumes:
+  roundcube_data:
 
 networks:
   app-network:

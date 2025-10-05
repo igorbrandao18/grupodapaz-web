@@ -1,73 +1,7 @@
 version: '3.8'
 
 services:
-  # Banco de dados para emails
-  maildb:
-    image: mysql:8.0
-    container_name: maildb
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: mailrootpass123
-      MYSQL_DATABASE: mailserver
-      MYSQL_USER: mailuser
-      MYSQL_PASSWORD: mailpass123
-    volumes:
-      - maildb_data:/var/lib/mysql
-    networks:
-      - mail-network
-
-  # Servidor de email Postfix + Dovecot
-  mailserver:
-    image: hardware/mailserver:latest
-    container_name: mailserver
-    restart: unless-stopped
-    ports:
-      - "25:25"    # SMTP
-      - "143:143"  # IMAP
-      - "587:587"  # SMTP Submission
-      - "993:993"  # IMAPS
-      - "110:110"  # POP3
-      - "995:995"  # POP3S
-    environment:
-      # Domínio principal
-      - MAILNAME=grupodapazbr.com.br
-      - DOMAINNAME=grupodapazbr.com.br
-      
-      # Configurações de banco
-      - DBNAME=mailserver
-      - DBUSER=mailuser
-      - DBPASS=mailpass123
-      - DBHOST=maildb
-      
-      # Configurações de admin
-      - ADMIN_USER=admin@grupodapazbr.com.br
-      - ADMIN_PASS=admin123456
-      
-      # Configurações de segurança
-      - ENABLE_SPAMASSASSIN=1
-      - ENABLE_CLAMAV=1
-      - ENABLE_FAIL2BAN=1
-      - ENABLE_POSTGREY=1
-      - ENABLE_MANAGESIEVE=1
-      
-      # Configurações de quota
-      - ENABLE_QUOTAS=1
-      - QUOTA_STORAGE_LIMIT=1000000000  # 1GB por usuário
-      
-      # Configurações de TLS
-      - TLS_FLAVOR=mail
-      
-    volumes:
-      - maildata:/var/mail
-      - mailstate:/var/mail-state
-      - maillogs:/var/log/mail
-      - ./config/mailserver:/tmp/docker-mailserver
-    depends_on:
-      - maildb
-    networks:
-      - mail-network
-
-  # Interface web Roundcube
+  # Interface web Roundcube (funciona sozinha)
   roundcube:
     image: roundcube/roundcubemail:latest
     container_name: roundcube
@@ -75,52 +9,38 @@ services:
     ports:
       - "8080:80"
     environment:
-      - ROUNDCUBEMAIL_DEFAULT_HOST=mailserver
+      - ROUNDCUBEMAIL_DEFAULT_HOST=localhost
       - ROUNDCUBEMAIL_DEFAULT_PORT=143
-      - ROUNDCUBEMAIL_SMTP_SERVER=mailserver
+      - ROUNDCUBEMAIL_SMTP_SERVER=localhost
       - ROUNDCUBEMAIL_SMTP_PORT=587
-      - ROUNDCUBEMAIL_DB_TYPE=mysql
-      - ROUNDCUBEMAIL_DB_HOST=maildb
-      - ROUNDCUBEMAIL_DB_NAME=roundcube
-      - ROUNDCUBEMAIL_DB_USER=mailuser
-      - ROUNDCUBEMAIL_DB_PASSWORD=mailpass123
     volumes:
       - roundcube_data:/var/www/html
-    depends_on:
-      - maildb
-      - mailserver
     networks:
       - mail-network
 
-  # Interface de administração (Mailu)
-  mailu-admin:
-    image: mailu/admin:latest
-    container_name: mailu-admin
+  # Interface de administração
+  adminer:
+    image: adminer:latest
+    container_name: adminer
     restart: unless-stopped
     ports:
-      - "8081:80"
-    environment:
-      - SECRET_KEY=secretkey123
-      - DBNAME=mailserver
-      - DBUSER=mailuser
-      - DBPASS=mailpass123
-      - DBHOST=maildb
-      - DOMAIN=grupodapazbr.com.br
-      - HOSTNAMES=mail.grupodapazbr.com.br
-    volumes:
-      - mailu_data:/data
-    depends_on:
-      - maildb
+      - "8081:8080"
+    networks:
+      - mail-network
+
+  # Servidor SMTP simples para testes
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web interface
     networks:
       - mail-network
 
 volumes:
-  maildb_data:
-  maildata:
-  mailstate:
-  maillogs:
   roundcube_data:
-  mailu_data:
 
 networks:
   mail-network:
