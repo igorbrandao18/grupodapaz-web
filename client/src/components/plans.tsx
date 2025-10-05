@@ -1,13 +1,14 @@
 import { Check, Loader2, Users, CreditCard } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import type { Plan } from "@shared/schema";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { trackPlanView, trackPlanClick } from "@/components/google-analytics";
 
 export default function Plans() {
   const { data: plans, isLoading, error } = useQuery<Plan[]>({
@@ -40,6 +41,8 @@ export default function Plans() {
   const handleOpenCheckout = (plan: Plan) => {
     setSelectedPlan(plan);
     setEmail("");
+    // Track plan click for analytics
+    trackPlanClick(plan.name, plan.price);
   };
 
   const handleCheckout = () => {
@@ -92,7 +95,13 @@ export default function Plans() {
 
         {plans && plans.length > 0 && (
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {plans.map((plan, index) => (
+            {plans.map((plan, index) => {
+              // Track plan view for analytics
+              useEffect(() => {
+                trackPlanView(plan.name, plan.price);
+              }, [plan.name, plan.price]);
+
+              return (
             <div
               key={index}
               className={`bg-card rounded-2xl shadow-lg overflow-hidden relative ${
@@ -167,7 +176,8 @@ export default function Plans() {
                 </button>
               </div>
             </div>
-            ))}
+            );
+            })}
           </div>
         )}
 

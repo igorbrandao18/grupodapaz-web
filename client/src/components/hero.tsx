@@ -57,6 +57,8 @@ export default function Hero() {
                 backgroundSize: "cover",
                 backgroundPosition: "center",
               }}
+              role="img"
+              aria-label={`Imagem ${index + 1} do carrossel - Serviços funerários do Grupo da Paz`}
             />
           ))}
 

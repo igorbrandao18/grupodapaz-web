@@ -4,6 +4,8 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/lib/auth-context";
+import GoogleAnalytics from "@/components/google-analytics";
+import { addResourceHints, trackWebVitals } from "@/components/performance-optimization";
 import Home from "@/pages/home";
 import Login from "@/pages/login";
 import PortalClient from "@/pages/portal-client";
@@ -27,10 +29,16 @@ function Router() {
 }
 
 function App() {
+  // Add performance optimizations
+  addResourceHints();
+  trackWebVitals();
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>
+          {/* Google Analytics - Replace with your actual Measurement ID */}
+          <GoogleAnalytics measurementId="G-XXXXXXXXXX" />
           <Toaster />
           <Router />
         </TooltipProvider>

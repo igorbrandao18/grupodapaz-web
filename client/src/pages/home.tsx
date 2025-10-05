@@ -10,10 +10,13 @@ import Contact from "@/components/contact";
 import Testimonials from "@/components/testimonials";
 import Footer from "@/components/footer";
 import BackToTop from "@/components/back-to-top";
+import StructuredData, { organizationStructuredData, serviceStructuredData } from "@/components/structured-data";
 
 export default function Home() {
   return (
     <div className="min-h-screen" data-testid="page-home">
+      <StructuredData type="Organization" data={organizationStructuredData} />
+      <StructuredData type="Service" data={serviceStructuredData} />
       <Navigation />
       <Hero />
       <WhyChoose />
