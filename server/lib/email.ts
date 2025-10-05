@@ -8,7 +8,7 @@ const createTransporter = () => {
   const smtpPass = process.env.SMTP_PASS || '';
   const smtpFrom = process.env.SMTP_FROM || 'noreply@grupodapazbr.com.br';
 
-  return nodemailer.createTransporter({
+  return nodemailer.createTransport({
     host: smtpHost,
     port: smtpPort,
     secure: false, // true para 465, false para outras portas
