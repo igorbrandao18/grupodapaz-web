@@ -1075,6 +1075,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Rota para criar usuários (admin)
+  app.post('/api/create-user', async (req, res) => {
+    try {
+      const { email, password, fullName, phone, role = 'client' } = req.body;
+      
+      if (!email || !password || !fullName) {
+        return res.status(400).json({ error: 'Email, senha e nome completo são obrigatórios' });
+      }
+
+      // Criar usuário no Supabase Auth
+      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email: email,
+        password: password,
+        email_confirm: true,
+      });
+
+      if (authError) {
+        console.error('Erro ao criar usuário no auth:', authError);
+        return res.status(400).json({ error: 'Erro ao criar usuário: ' + authError.message });
+      }
+
+      // Criar perfil do usuário
+      const { data: profileData, error: profileError } = await supabaseAdmin
+        .from('profiles')
+        .insert({
+          id: authData.user.id,
+          email: email,
+          full_name: fullName,
+          phone: phone || null,
+          role: role,
+        })
+        .select()
+        .single();
+
+      if (profileError) {
+        console.error('Erro ao criar perfil:', profileError);
+        // Tentar deletar o usuário criado no auth se o perfil falhou
+        await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
+        return res.status(400).json({ error: 'Erro ao criar perfil: ' + profileError.message });
+      }
+
+      // Enviar email de boas-vindas
+      try {
+        await sendWelcomeEmailSMTP(email, password, 'Plano Personalizado');
+      } catch (emailError) {
+        console.error('Erro ao enviar email de boas-vindas:', emailError);
+        // Não falhar a criação do usuário por causa do email
+      }
+
+      res.json({ 
+        success: true, 
+        message: 'Usuário criado com sucesso',
+        user: {
+          id: authData.user.id,
+          email: email,
+          fullName: fullName,
+          role: role
+        }
+      });
+    } catch (error) {
+      console.error('Erro ao criar usuário:', error);
+      res.status(500).json({ error: 'Falha ao criar usuário' });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
