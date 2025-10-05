@@ -19,6 +19,15 @@ export default function Plans() {
   const [email, setEmail] = useState("");
   const { toast } = useToast();
 
+  // Track plan views when plans are loaded
+  useEffect(() => {
+    if (plans && plans.length > 0) {
+      plans.forEach(plan => {
+        trackPlanView(plan.name, plan.price);
+      });
+    }
+  }, [plans]);
+
   const checkoutMutation = useMutation({
     mutationFn: async (data: { planId: number; email: string }) => {
       const response = await apiRequest("POST", "/api/create-checkout-session", data);
@@ -95,13 +104,7 @@ export default function Plans() {
 
         {plans && plans.length > 0 && (
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {plans.map((plan, index) => {
-              // Track plan view for analytics
-              useEffect(() => {
-                trackPlanView(plan.name, plan.price);
-              }, [plan.name, plan.price]);
-
-              return (
+            {plans.map((plan, index) => (
             <div
               key={index}
               className={`bg-card rounded-2xl shadow-lg overflow-hidden relative ${
@@ -176,8 +179,7 @@ export default function Plans() {
                 </button>
               </div>
             </div>
-            );
-            })}
+            ))}
           </div>
         )}
 

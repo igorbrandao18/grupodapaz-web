@@ -40,10 +40,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const config = await getSupabaseConfig();
         supabaseInstance = createClient(config.url, config.anonKey);
-        
-        const { data: { session } } = await supabaseInstance.auth.getSession();
+        supabase = supabaseInstance;
         
         if (mounted) {
+          // Set up auth state change listener
+          const {
+            data: { subscription },
+          } = supabaseInstance.auth.onAuthStateChange((_event, session) => {
+            setSession(session);
+            setUser(session?.user ?? null);
+            if (session?.user) {
+              loadProfile(session.user.id);
+            } else {
+              setProfile(null);
+              setLoading(false);
+            }
+          });
+
+          // Get initial session
+          const { data: { session } } = await supabaseInstance.auth.getSession();
           setSession(session);
           setUser(session?.user ?? null);
           if (session?.user) {
@@ -51,6 +66,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } else {
             setLoading(false);
           }
+
+          return () => subscription.unsubscribe();
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
@@ -60,41 +77,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
     
-    initAuth();
+    const cleanup = initAuth();
     
     return () => {
       mounted = false;
+      cleanup.then(cleanupFn => cleanupFn?.());
     };
   }, []);
-  
-  useEffect(() => {
-    if (!supabaseInstance) return;
-    
-    supabaseInstance.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        loadProfile(session.user.id);
-      } else {
-        setLoading(false);
-      }
-    });
-
-    const {
-      data: { subscription },
-    } = supabaseInstance.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        loadProfile(session.user.id);
-      } else {
-        setProfile(null);
-        setLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [supabaseInstance]);
 
   const loadProfile = async (userId: string) => {
     if (!supabaseInstance) return;

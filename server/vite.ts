@@ -76,7 +76,39 @@ export function serveStatic(app: Express) {
     );
   }
 
+  // Serve static files first
   app.use(express.static(distPath));
+
+  // Serve specific SEO files with correct content type
+  app.get('/sitemap.xml', (_req, res) => {
+    const sitemapPath = path.resolve(distPath, 'sitemap.xml');
+    if (fs.existsSync(sitemapPath)) {
+      res.setHeader('Content-Type', 'application/xml');
+      res.sendFile(sitemapPath);
+    } else {
+      res.status(404).send('Sitemap not found');
+    }
+  });
+
+  app.get('/robots.txt', (_req, res) => {
+    const robotsPath = path.resolve(distPath, 'robots.txt');
+    if (fs.existsSync(robotsPath)) {
+      res.setHeader('Content-Type', 'text/plain');
+      res.sendFile(robotsPath);
+    } else {
+      res.status(404).send('Robots.txt not found');
+    }
+  });
+
+  app.get('/site.webmanifest', (_req, res) => {
+    const manifestPath = path.resolve(distPath, 'site.webmanifest');
+    if (fs.existsSync(manifestPath)) {
+      res.setHeader('Content-Type', 'application/manifest+json');
+      res.sendFile(manifestPath);
+    } else {
+      res.status(404).send('Manifest not found');
+    }
+  });
 
   // fall through to index.html if the file doesn't exist
   app.use("*", (_req, res) => {
