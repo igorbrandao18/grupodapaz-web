@@ -15,8 +15,27 @@ services:
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
       - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
       - RESEND_API_KEY=${RESEND_API_KEY}
+      # Configurações de Email (Mailpit)
+      - SMTP_HOST=mailpit
+      - SMTP_PORT=1025
+      - SMTP_USER=
+      - SMTP_PASS=
+      - SMTP_FROM=noreply@grupodapazbr.com.br
     volumes:
       - ./attached_assets:/app/attached_assets
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  # Mailpit - Sistema de emails para desenvolvimento/testes
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "1025:1025"  # SMTP server
+      - "8025:8025"  # Web interface
+    environment:
+      - MP_SMTP_AUTH_ACCEPT_ANY=1
+      - MP_SMTP_AUTH_ALLOW_INSECURE=1
     restart: unless-stopped
     networks:
       - app-network

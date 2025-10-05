@@ -5,6 +5,7 @@ import { supabaseAdmin } from "./lib/supabaseServer";
 import { insertPlanSchema, insertSubscriptionSchema, insertDependentSchema, insertPaymentSchema, insertInvoiceSchema } from "@shared/schema";
 import { stripe } from "./lib/stripe";
 import { sendWelcomeEmail } from "./lib/resend";
+import { sendWelcomeEmail as sendWelcomeEmailSMTP, sendPasswordResetEmail, sendContactEmail, testEmailConnection } from "./lib/email";
 import crypto from "crypto";
 
 async function verifyAuth(req: any, res: any, next: any) {
@@ -1002,6 +1003,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error processing webhook:', error);
       res.status(500).json({ error: 'Webhook processing failed' });
+    }
+  });
+
+  // Rotas de Email
+  app.post('/api/test-email', async (req, res) => {
+    try {
+      const { email, type = 'welcome' } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ error: 'Email é obrigatório' });
+      }
+
+      let result;
+      switch (type) {
+        case 'welcome':
+          result = await sendWelcomeEmailSMTP(email, 'senha123', 'Plano Premium');
+          break;
+        case 'reset':
+          result = await sendPasswordResetEmail(email, 'token123');
+          break;
+        case 'contact':
+          result = await sendContactEmail('João Silva', email, 'Esta é uma mensagem de teste do sistema de contato.');
+          break;
+        default:
+          return res.status(400).json({ error: 'Tipo de email inválido' });
+      }
+
+      res.json({ 
+        success: true, 
+        message: `Email ${type} enviado com sucesso`,
+        messageId: result.messageId 
+      });
+    } catch (error) {
+      console.error('Erro ao enviar email de teste:', error);
+      res.status(500).json({ error: 'Falha ao enviar email' });
+    }
+  });
+
+  app.get('/api/test-email-connection', async (req, res) => {
+    try {
+      const isConnected = await testEmailConnection();
+      res.json({ 
+        success: isConnected,
+        message: isConnected ? 'Conexão SMTP OK' : 'Falha na conexão SMTP'
+      });
+    } catch (error) {
+      console.error('Erro ao testar conexão SMTP:', error);
+      res.status(500).json({ error: 'Falha ao testar conexão' });
+    }
+  });
+
+  app.post('/api/send-contact', async (req, res) => {
+    try {
+      const { name, email, message } = req.body;
+      
+      if (!name || !email || !message) {
+        return res.status(400).json({ error: 'Nome, email e mensagem são obrigatórios' });
+      }
+
+      const result = await sendContactEmail(name, email, message);
+      
+      res.json({ 
+        success: true, 
+        message: 'Mensagem enviada com sucesso',
+        messageId: result.messageId 
+      });
+    } catch (error) {
+      console.error('Erro ao enviar email de contato:', error);
+      res.status(500).json({ error: 'Falha ao enviar mensagem' });
     }
   });
 
